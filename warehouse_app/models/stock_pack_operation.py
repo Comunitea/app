@@ -170,7 +170,7 @@ class StockPackOperation (models.Model):
         op.write({'pda_done': do_id,
                   'qty_done': qty_done})
 
-        if do_id:
+        if do_id and False:
             print "Next op:%s" % next_id
             quants = op.return_quants_to_select(id, op.product_qty - qty_done)
             new_op = []
@@ -412,7 +412,7 @@ class StockPackOperation (models.Model):
 
     @api.model
     def SerialtoOp(self,vals):
-        
+
         id = vals.get('id', False)
         if not id:
             return False

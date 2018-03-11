@@ -279,6 +279,9 @@ scanValue(model, scan){
   }
 check_state(){
   return this.check_new_state()
+}
+
+check_old(){
   var self = this;
   self.state = 0;
   /* state == 0 si es la operacion tiene pacquete y se selecciona paquete // si no lo tiene y tienen lote se selecciona lote y ubicación o si no tiene lote producto más ubicación*/
@@ -356,6 +359,7 @@ submit (values){
                 confirm = self.reconfirm || (self.last_read == value.id)
                 
                 self.check_returned_value(value);
+                self.check_new_state();
                 /*if (self.waiting>=4 && self.op['location_dest_id']['need_check'] && !self.cargar){
                     self.doOp(self.op['id']);
                 }*/
@@ -546,7 +550,7 @@ submit (values){
 
     this.op['qty_done'] = Math.max(this.op['qty_done'], 0)
     this.op['qty_done'] = Math.min(this.op['qty_done'], package_qty)
-
+    this.op_selected['qty_done']= this.op['qty_done']
     this.check_state();
   }
 
@@ -584,6 +588,7 @@ submit (values){
             }
             else if (data.qty) {
               self.op['qty_done'] = data.qty
+              self.op_selected['qty_done']= data.qty
               self.check_state();
             }
             self.input = 0;
@@ -687,6 +692,8 @@ submit (values){
             odoo.call(model, method, values).then(
               function (res) {
                 if (res['id']!=0){
+                  self.state = 0;
+                  self.waiting = 0;
                   self.op = res['values']
                   self.check_loaded_values()
                   return true;
@@ -724,13 +731,13 @@ submit (values){
 
 
   check_new_state(){
-    if (this.op['tracking']=='none'){
+    if (this.op['tracking']['value']=='none'){
       return this.check_tracking_none()
     }
-    else if (this.op['tracking']=='lot'){
+    else if (this.op['tracking']['value']=='lot'){
       return this.check_tracking_lot()
     }
-    else if (this.op['tracking']=='serial'){
+    else if (this.op['tracking']['value']=='serial'){
       return this.check_tracking_serial()
     }
   } 
@@ -758,36 +765,62 @@ check_tracking_serial(){
   }
   
   check_tracking_none(){
-    let waiting = 1
-    
+    let waiting = this.waiting
     if (Boolean(this.op['package_id']) && !Boolean(this.op_selected['package_id'])){
       waiting = 6
     }
-    else if (this.op_selected['qty_done']==0.00){
-      waiting = 5}
-    else if (this.op_selected['qty_done']>0.00)
-      if (this.op['location_id']['need_check'] && !Boolean(this.op_selected['location_id'])){
+
+
+    if (waiting < 6) {
+      if (Boolean(this.op_selected['product_id']) && Boolean(this.op_selected['location_id']) && this.op_selected['qty_done']==0.00){
+        waiting = 5
+      }  
+      else if (this.op_selected['qty_done']>0.00 && Boolean(this.op_selected['product_id'])){
+      
+        if (this.op['location_id']['need_check'] && !Boolean(this.op_selected['location_id'])){
+          waiting = 4
+        }
+        else {
+          waiting = 6
+        }
+      }
+      else if (Boolean(this.op_selected['product_id'])){
         waiting = 4
       }
-      else {
-        waiting = 6
-      }
+      
+    }
 
-    if (waiting==6){
-      if (!this.op['location_id']['need_check']) {
+    else if (waiting>=6){
+      if (!this.op['location_dest_id']['need_check']) {
         if (!Boolean(this.op['result_package_id']) || this.op_selected['result_package_id'] && this.op_selected['result_package_id']['id']!= 0) {
           waiting = 10
         }
       }
+
       else if (Boolean(this.op['result_package_id']) && this.op_selected['result_package_id'] && this.op_selected['result_package_id']['id']!= 0){
-          if (Boolean(this.op_selected['location_dest_id'])){
-            waiting = 7
-          }
-          else {
-            waiting =10
-          }
+        if (Boolean(this.op_selected['location_dest_id'])){
+          waiting = 7
+        }
+        else {
+          waiting =10
+        }
+      }
+      else if (!Boolean(this.op['result_package_id'])) {
+        if (Boolean(this.op_selected['location_dest_id'])){
+          waiting =10 
+        }
+      }
+
+      else if (this.op['location_dest_id']['need_check'] && !Boolean(this.op['result_package_id'])){
+        if (Boolean(this.op_selected['location_dest_id'])){
+          waiting = 7
+        }
       }
     }
+    if (waiting <= 4) {this.state=0}
+    if (waiting == 5) {this.state=1}
+    if (waiting >= 6) {this.state=2}
+
     if (waiting==10){
       this.cargar = true;
       this.doOp(this.op_id
@@ -796,7 +829,105 @@ check_tracking_serial(){
   }
 
   check_returned_value(value){
-    
+    if (this.state == 0) {
+      if (value.model=='product.product') {
+        if (value.id == this.op['pda_product_id']['id']){
+        this.op_selected['product_id'] = this.op['pda_product_id']
+        }
+      }
+      else if (value.model=='stock.quant.package') {
+        if (value.id == this.op['package_id']['id'] && this.package_id_change == 0){
+          this.op_selected['product_id'] = this.op['pda_product_id']
+          this.op_selected['package_id'] = this.op['package_id']
+          this.op_selected['location_id'] = this.op['location_id']
+        }
+        else if (value.id != this.op['package_id']['id']){
+          this.package_id_change = value.id;
+          this.presentToast('Cambiando de paquete de origen')
+        }
+        else if (value.id == this.package_id_change){
+          this.package_id_change = 0;
+          this.change_op_value(this.op_id, 'package_id', value.id);
+          this.cargar = true;
+          this.presentToast('Confirmado cambio de paquete de origen. Recargando ...')
+          this.loadOpObj()
+        }
+        else if (this.package_id_change != 0 && value.id != this.package_id_change){
+          this.package_id_change = 0;
+          this.presentToast('Cancelado el cambio de paquete de origen')
+        }
+
+      }
+
+      else if (value.model=='stock.location') {
+        if (value.id == this.op['location_id']['id'] && this.location_id_change == 0){
+          this.op_selected['location_id'] = this.op['location_id']
+        }
+        else if (value.id != this.op['location_id']['id']){
+          this.location_id_change = value.id;
+          this.presentToast('Cambiando de ubicación de origen')
+        }
+        else if (value.id == this.location_id_change){
+          this.package_dest_id_change = 0;
+          this.change_op_value(this.op_id, 'location_id', value.id);
+          this.cargar = true;
+          this.presentToast('Confirmado cambio de ubicación de origen')
+        }
+        else if (this.location_id_change != 0 && value.id != this.location_id_change){
+          this.location_id_change = 0;
+          this.presentToast('Cancelado el cambio de ubicación de origen')
+        }
+      }
+      else if (value.model=='stock.production.lot') {
+        if (value.id == this.op['lot_id']['id']){
+          this.op_selected['lot_id'] = this.op['lot_id']
+        }
+      }
+    }
+
+    else if (this.state == 2){
+      if (value.model=='stock.location') {
+        if (value.id == this.op['location_dest_id']['id'] && this.location_id_change == 0){
+          this.op_selected['location_dest_id'] = this.op['location_dest_id']
+        }
+        else if (value.id != this.op['location_dest_id']['id']){
+          this.location_id_change = value.id;
+          this.presentToast('Cambiando de ubicación')
+        }
+        else if (value.id == this.location_id_change){
+          this.package_dest_id_change = 0;
+          this.change_op_value(this.op_id, 'location_dest_id', value.id);
+          this.cargar = true;
+          this.presentToast('Confirmado cambio de ubicación de destino')
+        }
+        else if (this.location_id_change != 0 && value.id != this.location_id_change){
+          this.location_id_change = 0;
+          this.presentToast('Cancelado el cambio de ubicación de destino')
+        }
+      }
+
+      else if (value.model=='stock.quant.package') {
+        if (value.id == this.op['result_package_id']['id'] && this.package_id_change == 0){
+          this.op_selected['result_package_id'] = this.op['result_package_id']
+        }
+        else if (value.id != this.op['result_package_id']['id']){
+          this.package_id_change = value.id;
+          this.presentToast('Cambiando de paquete de destino')
+        }
+        else if (value.id == this.package_id_change){
+          this.package_id_change = 0;
+          this.change_op_value(this.op_id, 'result_package_id', value.id);
+          this.cargar = true;
+          this.presentToast('Confirmado cambio de paquete de destino')
+        }
+        else if (this.package_id_change != 0 && value.id != this.package_id_change){
+          this.package_id_change = 0;
+          this.presentToast('Cancelado el cambio de paquete de destino')
+        }
+      }
+    }  
+      
+
   }
 
 

@@ -26,7 +26,7 @@
   </div>
     <ion-list *ngIf="op">
         <ion-item-group> 
-          <ion-item no-lines [ngClass]="{'no_ok': state==0, 'ok': state!=0}">
+          <ion-item no-lines [ngClass]="{'no_ok': state<2, 'ok': state==2}">
             <ion-label item-start>
                 ORIGEN
             </ion-label>
@@ -35,10 +35,11 @@
           
           <ion-item>
               <ion-label color="primary"></ion-label>
-              <button ion-button outline item-end class ="w100">{{op.pda_product_id && op.pda_product_id.name}}</button>
+              <button ion-button outline item-end class ="w100" [ngClass]="{'buttonOp_ok': waiting > 2, 'buttonOp': waiting <= 2}"
+                    (click)="scanValue('product.product', op.pda_product_id && op.pda_product_id.barcode)">{{op.pda_product_id && op.pda_product_id.name}}</button>
           </ion-item>
           <ion-item [hidden] = "!op.package_id">
-            <button ion-button outline item-end (click)="scanValue('stock.quant.package', op.package_id && op.package_id.name)"  [ngClass]="{'buttonOp_ok': waiting != 1, 'buttonOp': waiting == 1}">{{op.package_id && op.package_id.name}}</button>
+            <button ion-button outline item-end (click)="scanValue('stock.quant.package', op.package_id && op.package_id.name)"  [ngClass]="{'buttonOp_ok': waiting > 1, 'buttonOp': waiting <= 1}">{{op.package_id && op.package_id.name}}</button>
             <ion-toggle [(ngModel)]="!op.product_id"  (ionChange)="change_package_qty()" item-start ></ion-toggle>
           </ion-item>
 
@@ -62,14 +63,14 @@
           </ion-item>
           <ion-item>
               <ion-label color="primary" >De</ion-label>
-              <button ion-button outline item-end [ngClass]="{'buttonOp_ok': waiting != '3', 'buttonOp': waiting == '3'}" (click)="scanValue('stock.location', op.location_id.barcode)">
+              <button ion-button outline item-end [ngClass]="{'buttonOp_ok': waiting != 4, 'buttonOp': waiting == 4}" (click)="scanValue('stock.location', op.location_id.barcode)">
                 {{op.location_id && op.location_id.name}}
               </button>
           </ion-item>
         </ion-item-group>
 
         <ion-item-group>
-          <ion-item no-lines [ngClass]="{'ok': state==2, 'no_ok': state!=2}">
+          <ion-item no-lines [ngClass]="{'no_ok': waiting<10}">
             <ion-label class="bold" item-start onclick="set_dest()">
               DESTINO
             </ion-label>
@@ -89,7 +90,7 @@
 
 
             <button ion-button outline item-end [hidden] = "!op_selected.result_package_id" (click)="scanValue('stock.quant.package', op.result_package_id.name)"
-            [ngClass]="{'buttonOp_ok': waiting != 4, 'buttonOp': waiting == 4}">
+            [ngClass]="{'buttonOp_ok': waiting != 7, 'buttonOp': waiting == 7}">
               {{op_selected.result_package_id && op_selected.result_package_id.name}}
             </button>
           </ion-item>
@@ -97,14 +98,14 @@
             <ion-label color="primary">A</ion-label>
             <button ion-button outline item-end (click)="scanValue('stock.location', op.location_dest_id.barcode)"
             
-            [ngClass]="{'buttonOp_ok': waiting != 5, 'buttonOp': waiting == 5}">
+            [ngClass]="{'buttonOp_ok': waiting != 7, 'buttonOp': waiting == 7}">
               {{op.location_dest_id && op.location_dest_id.name}}
             </button>
             <ion-toggle [(ngModel)]="op.location_dest_id && op.location_dest_id.need_check"></ion-toggle>
           </ion-item>
         </ion-item-group>
         <ion-item>
-          Estado: {{state}} Espero {{waiting}}
+          Estado: {{state}} Espero {{waiting}} Tipo {{op.tracking && op.tracking.value}}
         </ion-item>
       </ion-list>
   
