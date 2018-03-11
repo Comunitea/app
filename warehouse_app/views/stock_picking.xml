@@ -20,7 +20,7 @@
                 </field>
 
                 <xpath expr="//field[@name='pack_operation_product_ids']/tree/field[@name='product_qty']" position="after">
-                    <field name="qty_done"/>
+                    <!--field name="qty_done"/-->
                     <field name="pda_done"/>
                     <!--field name="pda_checked"/-->
                 </xpath>

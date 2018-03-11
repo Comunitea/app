@@ -80,7 +80,6 @@ this.search = function(model, domain) {
 this.search_read = function(model, domain, fields, offset, limit) {
     
 var odoo_api = this;
-var ctx ={'lang': 'es_ES'}
 var order = false
 if (!domain)
     domain = [];
@@ -91,9 +90,9 @@ var promise = new Promise(function(resolve, reject) {
         url: odoo_api.odoo_host + 'xmlrpc/object',
         methodName: 'execute',
         params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
-                 model, 'search_read', domain, fields, offset, limit, order, ctx],
+                 model, 'search_read', domain, fields, offset, limit, order, odoo_api.context],
         timeout: 10000,
-        context: ctx,//{'lang': 'es_ES'}, //odoo_api,
+        context: odoo_api.context,//{'lang': 'es_ES'}, //odoo_api,
         success: function(response, status, jqXHR) {
             if (response[0]) {
                 resolve(response[0]);
@@ -113,16 +112,17 @@ return promise
 this.read = function(model, ids, fields) {
         
     var odoo_api = this;
-    var ctx = {'lang': 'es_ES'}
+    var limit = 0
+    var order = false
     var promise = new Promise(function(resolve, reject) {
         $.xmlrpc({
             headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
             url: odoo_api.odoo_host + 'xmlrpc/object',
             methodName: 'execute',
             params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
-                     model, 'read', ids, fields, ctx],
+                     model, 'read', ids, fields, limit, order, odoo_api.context],
             timeout: 10000,
-            context: ctx , //odoo_api,
+            context: odoo_api.context,
             success: function(response, status, jqXHR) {
                 if (response[0]) {
                     resolve(response[0]);
@@ -226,16 +226,18 @@ this.delete = function(model, ids) {
     return promise
 };
 this.call = function(model, method, values) {
-    
-    var odoo_api = this;
     var ctx ={'lang': 'es_ES'} 
+    this.context = ctx
+    var odoo_api = this;
+    
+
     var promise = new Promise(function(resolve, reject) {
         $.xmlrpc({
             headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
             url: odoo_api.odoo_host + 'xmlrpc/object',
             methodName: 'execute',
             params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
-                    model, method, values],
+                    model, method, values, odoo_api.context],
             timeout: 10000,
             context: odoo_api.context,
             success: function(response, status, jqXHR) {

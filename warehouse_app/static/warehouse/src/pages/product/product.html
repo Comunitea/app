@@ -12,31 +12,31 @@
 
 </ion-header>
 <ion-content>
-    <div *ngIf="!cargar" style="text-align: center">
+    <div *ngIf="!cargar" style="text-align: center">    
       <ion-spinner name="circles"></ion-spinner><br>
       <b>Cargando...</b>
     </div>
 
     <ion-list *ngIf="cargar">
-      <ion-item-group>
-
+      <ion-item-group> 
+        
         <ion-item class="all0">
             <ion-label></ion-label>
             <ion-badge item-end class="ion-info" w50>
                 {{item.qty_available}} {{item.uom_id[['name']]}}
             </ion-badge>
         </ion-item>
-
+        
         <ion-item class="all0">
             <ion-label></ion-label>
             <ion-badge item-end class="ion-info w50">
-                EAN {{item.barcode}}
+                EAN {{item.ean13}}
             </ion-badge>
             <ion-badge item-end class="ion-info w50" >
                 REF {{item.default_code}}
             </ion-badge>
         </ion-item>
-      </ion-item-group>
+      </ion-item-group>    
 
       <ion-item-group [hidden] = "!item['quant_ids']">
         <ion-item  no-lines class="all0">
@@ -50,12 +50,12 @@
           <ion-badge item-start color="odoo" class="ion-info w50" (click)="open('stock.production.lot', subitem['lot_id']['id'])">
               {{subitem['display_name']}}
           </ion-badge>
-
+          
           <ion-badge item-start color="white" class="ion-info w50" (click)="open('stock.location', subitem['location_id']['id'])">
             {{subitem['location_id']['name']}}
           </ion-badge>
         </ion-item>
       </ion-item-group>
-
+            
     </ion-list>
 </ion-content>

@@ -9,7 +9,7 @@
       <button ion-button icon-only menuToggle>
         <ion-icon name="menu"></ion-icon>
       </button>
-      <ion-title>{{ op['picking_id'] && op['picking_id'][1]}} [{{ op['id']}}] {{index}} Usuario: {{pick['user_id']}}</ion-title>
+      <ion-title [hidden]="!op">{{ op.picking_id && op.picking_id.name}} [{{ op.id}}] {{index}} [{{op.picking_id && op.picking_id.user_id && op.picking_id.user_id.name}}]</ion-title>
       <ion-buttons end>
         
         <button ion-button (click)="goHome()">
@@ -24,7 +24,7 @@
     <ion-spinner name="circles"></ion-spinner><br>
     <b>Cargando...</b>
   </div>
-    <ion-list>
+    <ion-list *ngIf="op">
         <ion-item-group> 
           <ion-item no-lines [ngClass]="{'no_ok': state==0, 'ok': state!=0}">
             <ion-label item-start>
@@ -35,26 +35,35 @@
           
           <ion-item>
               <ion-label color="primary"></ion-label>
-              <button ion-button outline item-end [ngClass]="{'buttonOp_ok': op_selected.product_id == 0, 'buttonOp': op_selected.product_id != 0}">{{op.pda_product_id && op.pda_product_id[1]}}</button>
+              <button ion-button outline item-end class ="w100">{{op.pda_product_id && op.pda_product_id.name}}</button>
           </ion-item>
           <ion-item [hidden] = "!op.package_id">
-            <button ion-button outline item-end (click)="scanValue('stock.quant.package', op.package_id[1])"  [ngClass]="{'buttonOp_ok': waiting != 1, 'buttonOp': waiting == 1}">{{op.package_id && op.package_id[1]}}</button>
-            <ion-toggle [(ngModel)]="!product_id"  (ionChange)="change_package_qty()" item-start ></ion-toggle>
+            <button ion-button outline item-end (click)="scanValue('stock.quant.package', op.package_id && op.package_id.name)"  [ngClass]="{'buttonOp_ok': waiting != 1, 'buttonOp': waiting == 1}">{{op.package_id && op.package_id.name}}</button>
+            <ion-toggle [(ngModel)]="!op.product_id"  (ionChange)="change_package_qty()" item-start ></ion-toggle>
           </ion-item>
-          
-          <ion-item>
-              <ion-label color="primary" >Lote</ion-label>
-              <button ion-button outline item-end [ngClass]="{'buttonOp_ok': waiting != 2, 'buttonOp': waiting == 2}" (click)="scanValue('stock.production.lot', op.lot_id[1])">{{op.lot_id && op.lot_id[1]}}</button>
+
+          <ion-item [hidden] = "op.tracking && op.tracking.value != 'serial'">
+              <ion-label color="primary" >Nº de serie</ion-label>
+              <button ion-button outline item-end (click)="showSerial(op)"><ion-icon name="eye"></ion-icon></button>
+              <button ion-button outline item-end (click)="addSerial('add')"><ion-icon name="add"></ion-icon></button>
+              <button ion-button outline item-end (click)="addSerial('remove')"><ion-icon name="trash"></ion-icon></button>
+          </ion-item>
+
+          <ion-item [hidden] = "op.tracking && op.tracking.value != 'lot'">
+              <ion-label color="primary">Lote</ion-label>
+              <button ion-button outline item-end [ngClass]="{'buttonOp_ok': waiting != 2, 'buttonOp': waiting == 2}" (click)="scanValue('stock.production.lot', op.lot_id && op.lot_id.name)">{{op.lot_id && op.lot_id.name}}</button>
           </ion-item>
          
           <ion-item [hidden] = "package_qty">
             <ion-label color="primary">Qty</ion-label>
-            <button ion-button outline item-end (click)="inputQty()"  class='buttonOp_ok'> {{ op.qty_done }} {{ op.product_uom && op.product_uom[1]}}</button>
+            <button ion-button no-lines item-end (click)="inputQty()"> {{ op.qty_done }} {{ op.pda_product_id && op.pda_product_id.uom_id && op.pda_product_id.uom_id.name}}</button>
+            <button ion-button outline item-end (click)="addQty(op.id, 1.00)" [hidden] = "op.tracking == 'serial'"><ion-icon name="add"></ion-icon></button>
+            <button ion-button outline item-end (click)="addQty(op.id, -1.00)" [hidden] = "op.tracking == 'serial'"><ion-icon name="remove"></ion-icon></button>
           </ion-item>
           <ion-item>
               <ion-label color="primary" >De</ion-label>
-              <button ion-button outline item-end [ngClass]="{'buttonOp_ok': waiting != '3', 'buttonOp': waiting == '3'}" (click)="scanValue('stock.location', op.location_id_barcode)">
-                {{op.location_id && op.location_id[1]}}
+              <button ion-button outline item-end [ngClass]="{'buttonOp_ok': waiting != '3', 'buttonOp': waiting == '3'}" (click)="scanValue('stock.location', op.location_id.barcode)">
+                {{op.location_id && op.location_id.name}}
               </button>
           </ion-item>
         </ion-item-group>
@@ -68,24 +77,30 @@
           <ion-item>
             <ion-label></ion-label>
             <!--ion-icon name="log-out" [hidden] = "op.result_package_id" item-start color="danger" (click)="no_result_package('orig')"></ion-icon>
-            <ion-icon name="log-in" [hidden] = "!op.result_package_id && op_selected.result_package_id" item-start color="secondary" (click)="no_result_package('none')"></ion-icon-->
+            <ion-icon name="log-in" [hidden] = "!op.result_package_id && op_selected.result_package_id" item-start color="secondary" (click)="no_result_package('none')"></ion-icon>
             <button ion-button name="log_out" [hidden] = "op.result_package_id" item-start color="odoo" (click)="no_result_package('orig')">Empaquetar</button>
-            <button ion-button name="log_in" [hidden] = "!op.result_package_id && op_selected.result_package_id" item-start color="odoo" (click)="no_result_package('none')">Sin paquete</button>
-            <button ion-button name="new_result_package" [hidden] = "result_package_id == -1" item-start color="odoo" (click)="no_result_package('new')">Nuevo</button>
 
-            <button ion-button outline item-end [hidden] = "!op_selected.result_package_id" (click)="scanValue('stock.quant.package', op.result_package_id[1])"
+            <button ion-button name="log_in" [hidden] = "!op.result_package_id && op_selected.result_package_id" item-start color="odoo" (click)="no_result_package('none')">Sin paquete</button>
+            <button ion-button name="new_result_package" [hidden] = "result_package_id == -1" item-start color="odoo" (click)="no_result_package('new')">Nuevo</button-->
+            
+            <button ion-button outline item-start (click)="no_result_package('new')" [hidden] = "result_package_id == -1" ><ion-icon name="color-wand"></ion-icon></button>
+            <button ion-button outline item-start (click)="no_result_package('orig')" [hidden] = "op.result_package_id"><ion-icon name="home"></ion-icon></button>
+            <button ion-button outline item-start (click)="no_result_package('none')" [hidden] = "!op.result_package_id && op_selected.result_package_id"><ion-icon name="trash"></ion-icon></button>    
+
+
+            <button ion-button outline item-end [hidden] = "!op_selected.result_package_id" (click)="scanValue('stock.quant.package', op.result_package_id.name)"
             [ngClass]="{'buttonOp_ok': waiting != 4, 'buttonOp': waiting == 4}">
-              {{op_selected.result_package_id && op_selected.result_package_id[1]}}
+              {{op_selected.result_package_id && op_selected.result_package_id.name}}
             </button>
           </ion-item>
           <ion-item>
             <ion-label color="primary">A</ion-label>
-            <button ion-button outline item-end (click)="scanValue('stock.location', op.location_dest_id_barcode)"
+            <button ion-button outline item-end (click)="scanValue('stock.location', op.location_dest_id.barcode)"
             
             [ngClass]="{'buttonOp_ok': waiting != 5, 'buttonOp': waiting == 5}">
-              {{op.location_dest_id && op.location_dest_id[1]}}
+              {{op.location_dest_id && op.location_dest_id.name}}
             </button>
-            <ion-toggle [(ngModel)]="op.location_dest_id_need_check"></ion-toggle>
+            <ion-toggle [(ngModel)]="op.location_dest_id && op.location_dest_id.need_check"></ion-toggle>
           </ion-item>
         </ion-item-group>
         <ion-item>
@@ -97,7 +112,7 @@
   
 </ion-content>
 <ion-footer>
-    <form [formGroup]="barcodeForm" class ="alignBottom" [hidden] = "op['pda_done']">
+    <form [formGroup]="barcodeForm" class ="alignBottom" [hidden] = "op && op.pda_done">
         <ion-item>
            <ion-label color="odoo" item-start>Scan: </ion-label>
            <ion-input #scan [formControl]="barcodeForm.controls['scan']" type="text" name="scan" placeholder = "Scan"  autofocus></ion-input>

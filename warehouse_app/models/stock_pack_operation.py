@@ -33,6 +33,7 @@ class StockPackOperation (models.Model):
     pda_checked = fields.Boolean('Pda checked', help='True if visited in PDA')
     total_qty = fields.Float('Real qty', compute=get_app_names, multi=True)
     #real_lot_id = fields.Many2one('stock.production.lot', 'Real lot', compute=get_real_lot_id, store=True)
+    tracking = fields.Selection(related='pda_product_id.tracking')
 
 
     def change_package_id_from_pda(self, id, new_package_id):
@@ -196,6 +197,7 @@ class StockPackOperation (models.Model):
                                                                         qty,
                                                                         prefered_domain_list=[[('reservation_id', '=', False)]])
         return quants
+
 
     @api.model
     def create_new_op_from_pda(self, quant_tupple, result_package_id=False):
@@ -394,6 +396,60 @@ class StockPackOperation (models.Model):
                 ctx.update({'new_package_id': new_package})
                 move.with_context(ctx).action_assign()
                 return move.move_prepare_partial()
+
+
+
+    def changeSerialQty(self, vals):
+        lot_id = vals.get('lot_id', False)
+        qty = vals.get('qty', False)
+        if lot_id & qty:
+            lot_id = self.env['stock.pack.operation.lot'].browse(lot_id)
+            if not lot_id:
+                return False
+
+            lot_id.self.action_add_quantity(qty)
+        return True
+
+    @api.model
+    def SerialtoOp(self,vals):
+        
+        id = vals.get('id', False)
+        if not id:
+            return False
+        op = self.browse(id)
+
+        serial = vals.get('serial', False)
+        product_id = vals.get('product_id', False)
+        lot_id = vals.get('lot_id', False)
+        option = vals.get('option', 'add')
+        if option == 'qty' and lot_id:
+            return op.changeSerialQty(vals)
+        if not product_id:
+            product_id = op.pda_product_id.id
+        if option == 'remove' and serial:
+
+            lot = self.env['stock.production.lot'].search_read([('product_id', '=', product_id), ('name', '=', serial)],['id'],limit = 1)
+            lot_id = lot and lot['id']
+            self.env['stock.pack.operation.lot'].search([('operation_id', '=', id), ('lot_id', '=', lot_id)]).unlink()
+            return lot_id
+
+        if option == 'add' :
+            if not serial:
+                return False
+
+
+
+            lot_id = self.env['stock.production.lot'].search([('product_id', '=', product_id), ('name', '=', serial)], limit = 1)
+            if not lot_id:
+                new_lot_vals = {'name': serial, 'product_id': product_id}
+                lot_id = self.env['stock.production.lot'].create(new_lot_vals)
+
+            if lot_id:
+                new_lot_ids_vals ={'operation_id': id , 'lot_id': lot_id.id, 'lot_name': lot_id.name, 'qty': 1}
+                self.env['stock.pack.operation.lot'].create(new_lot_ids_vals)
+
+            return lot_id.id
+
 
 
 

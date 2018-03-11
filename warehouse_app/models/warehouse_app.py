@@ -31,7 +31,7 @@ INFO_FIELDS = {'stock.quant.package': ['id', 'name', 'lot_id', 'location_id','pa
               'stock.location': ['id', 'name', 'usage', 'barcode', 'need_check'],
               'product.product': ['id', 'display_name', 'name', 'barcode', 'default_code', 'default_stock_location_id', 'tracking', 'uom_id', 'qty_available'],
               'stock.picking': ['id', 'name', 'picking_type_id', 'user_id', 'min_date', 'state', 'location_id', 'location_dest_id', 'wave_id', 'priority', 'remaining_ops', 'pack_operation_count', 'pack_operation_ids'],
-              'stock.pack.operation': ['id', 'display_name', 'package_id', 'product_id', 'pack_lot_ids', 'pda_product_id', 'pda_done', 'is_done' , 'product_qty', 'qty_done', 'ordered_qty'],
+              'stock.pack.operation': ['id', 'display_name', 'package_id', 'pack_lot_ids', 'pda_product_id', 'pda_done', 'is_done', 'product_qty', 'qty_done', 'ordered_qty', 'tracking', 'picking_id', 'location_id', 'location_dest_id'],
               'stock.pack.operation.lot': ['id', 'display_name', 'lot_id', 'qty', 'qty_todo']}
 
 INFO_FIELDS_M2O = {'stock.quant.package': ['id', 'name', 'location_id', 'package_qty', 'multi', 'product_id', 'uom_id'],
@@ -40,10 +40,11 @@ INFO_FIELDS_M2O = {'stock.quant.package': ['id', 'name', 'location_id', 'package
                   'stock.quant':['id', 'display_name', 'lot_id', 'location_id', 'qty', 'reservation_id', 'in_date'],
                   'product.uom': ['id', 'name'],
                   'res.users':  ['id', 'name'],
-                  'stock.pack.operation': ['id', 'display_name', 'package_id', 'product_id', 'pack_lot_ids', 'pda_product_id', 'pda_done', 'is_done', 'product_qty', 'qty_done', 'ordered_qty'],
+                  'stock.pack.operation': ['id', 'display_name', 'package_id', 'pack_lot_ids', 'pda_product_id', 'pda_done', 'is_done', 'product_qty', 'qty_done', 'ordered_qty', 'tracking', 'picking_id', 'location_id', 'location_dest_id'],
                   'stock.pack.operation.lot': ['id', 'display_name', 'lot_id', 'qty', 'qty_todo'],
                   'stock.picking.type': ['id', 'name', 'show_in_pda', 'short_name', 'code', 'use_create_lots', 'use_existing_lots', 'show_entire_packs'],
-                  'product.product': ['id', 'display_name', 'barcode', 'name', 'default_code', 'default_stock_location_id', 'tracking']}
+                  'stock.picking': ['id', 'name', 'picking_type_id', 'user_id', 'min_date', 'state', 'location_id', 'location_dest_id', 'wave_id', 'priority', 'remaining_ops', 'pack_operation_count', 'pack_operation_ids'],
+                  'product.product': ['id', 'display_name', 'barcode', 'name', 'default_code', 'default_stock_location_id', 'tracking', 'uom_id']}
 
 
 class WarehouseApp (models.Model):
@@ -60,6 +61,10 @@ class WarehouseApp (models.Model):
                 fields[field] = object_id[field]
         return fields
 
+    def get_selection(self, object_id, field):
+        value = [t for t in object_id.fields_get(field)[field]['selection'] if t[0].startswith(object_id[field])]
+        return value and {'value': value[0][0], 'name': value[0][1]} or ''
+
     @api.model
     def get_info_object(self, vals):
         model = vals.get('model', False)
@@ -71,30 +76,41 @@ class WarehouseApp (models.Model):
         for field in INFO_FIELDS[model]:
             if object_id.fields_get(field)[field]['type'] == 'many2one':
                 field_value[field] = self.get_m2o_vals(object_id, field)
-            elif object_id.fields_get(field)[field]['type'] == 'one2many':
 
+            elif object_id.fields_get(field)[field]['type'] == 'selection':
+                field_value[field] = self.get_selection(object_id, field)
+            elif object_id.fields_get(field)[field]['type'] == 'one2many':
                 field_value[field] = self.get_o2m_vals(object_id, field)
             else:
                 field_value[field] = object_id[field]
-            print "---------%s\n\n\n%s\n\n"%(field, field_value)
+            #print "---------%s\n\n\n%s\n\n"%(field, field_value)
 
         res = {'model': model, 'id': id, 'values': field_value}
+
         return res
 
 
     def get_m2o_vals(self, object_id, field):
-         print "-----------%s"%object_id
+         #print "-----------%s"%object_id
          #import ipdb; ipdb.set_trace()
          if object_id[field]:
              sub_values = {}
              submodel = object_id.fields_get(field)[field]['relation']
-             print "-------------------%s"%field
+             #print "-------------------%s"%field
              for sub_field in INFO_FIELDS_M2O[submodel]:
-                 print "-------------------%s  >>>  %s" % (field, sub_field)
+                 #print "-------------------%s  >>>  %s" % (field, sub_field)
                  if object_id[field].fields_get(sub_field)[sub_field]['type'] == 'many2one':
                      sub_values[sub_field] = self.get_m2o_val(object_id[field][sub_field])
-                 if object_id[field].fields_get(sub_field)[sub_field]['type'] == 'one2many':
-                     sub_values[sub_field] = self.get_o2m_vals(object_id[field], sub_field)
+
+                 elif object_id[field].fields_get(sub_field)[sub_field]['type'] == 'selection':
+                     sub_values[sub_field] = self.get_selection(object_id[field],sub_field)
+
+                 elif object_id[field].fields_get(sub_field)[sub_field]['type'] == 'one2many':
+                     if object_id[field][sub_field]._name != object_id._name:
+                         sub_values[sub_field] = self.get_o2m_vals(object_id[field], sub_field)
+                     else:
+                         sub_values[sub_field] = object_id[field][sub_field].mapped('display_name')
+
                  else:
                      sub_values[sub_field] = object_id[field][sub_field]
          else:
@@ -117,10 +133,11 @@ class WarehouseApp (models.Model):
                 if sub_model_id.fields_get(sub_field)[sub_field]['type'] == 'many2one':
                     sub_values[sub_field] = self.get_m2o_val(sub_model_id[sub_field])
                 elif sub_model_id.fields_get(sub_field)[sub_field]['type'] == 'one2many':
-                    print "Falla aqui"
-
                     sub_values[sub_field] = self.get_o2m_vals(sub_model_id, sub_field)
-                    print "No Fallo"
+
+                elif sub_model_id.fields_get(sub_field)[sub_field]['type'] == 'selection':
+                    sub_values[sub_field] = self.get_selection(sub_model_id, sub_field)
+
                 else:
                     sub_values[sub_field] = sub_model_id[sub_field]
             sub_model_id_values.append(sub_values)
@@ -130,16 +147,18 @@ class WarehouseApp (models.Model):
     @api.model
     def get_object_id(self, vals):
 
-        print "Recibo %s" % vals
+        print "Recibo %s con contexto %s" % (vals, self._context)
         model = vals.get('model', False)
         id = vals.get('id', False)
         if id and model:
-            return self.get_info_object({'id': id, 'model': model})
+            res = self.get_info_object({'id': id, 'model': model})
+            print res
+            return res
 
-        object_id = False
-        res = {}
-        return_object = vals.get('return_object', False)
-        field_value = {}
+        #object_id = False
+        #res = {}
+        #return_object = vals.get('return_object', False)
+        #field_value = {}
         default_domain = vals.get('domain', False)
         search_str = vals.get('search_str')
 
@@ -160,7 +179,6 @@ class WarehouseApp (models.Model):
             res = {'model': SEARCH_OPTIONS.keys(), 'id': 0,  'message': 'No se ha encontrado un objeto para %s'%search_str}
 
         print "Retorno %s"%res
-
         return res
 
 

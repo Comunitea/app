@@ -68,10 +68,12 @@ export class SlideopPage {
   reconfirm: boolean 
   waiting: number = 0
   pick = []
+  last_id : number = 0
 
   constructor(public navCtrl: NavController, public toastCtrl: ToastController, public navParams: NavParams, private formBuilder: FormBuilder, public alertCtrl: AlertController, private storage: Storage) {
     
     this.op_id = this.navParams.data.op_id;
+    this.last_id = this.op_id
     this.pick = []
     this.reconfirm = false
     this.ops = this.navParams.data.ops;
@@ -83,7 +85,8 @@ export class SlideopPage {
     this.barcodeForm = this.formBuilder.group({scan: ['']});
     this.state = this.navParams.data.origin || 0;
     this.resetValues()
-    this.resetForm()
+    //this.resetForm()
+    this.loadOpObj(this.op_id)
 
     }
 
@@ -117,7 +120,7 @@ export class SlideopPage {
     else {self.op_selected['result_package_id'] = [-1, 'Nuevo'];}
   }
   resetForm(){
-    this.cargarOP();
+    this.loadOpObj(this.op_id);
    }
   get_op_selected(){
     var field
@@ -152,57 +155,8 @@ export class SlideopPage {
       }});
     }
 
-  cargarOP(){
-    
-    var self = this;
-    var last_id = self.op['id']
-    var qty_done = self.op_selected['qty_done']
-    var last_picking_id = self.op['picking_id']
-    self.resetOPValues();
-    this.storage.get('CONEXION').then((val) => {
-      if (val == null) {
-          self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
-      } else {
-          var con = val;
-          var odoo = new OdooApi(con.url, con.db);
-          odoo.login(con.username, con.password).then(
-            function (uid) {
-              self.cargar = true;
-              odoo.search_read(self.model, self.domain, self.op_fields, 0, 0).then(
-                function (value) {
-                  //self.resetValues()
-                  self.op = value[0];
-                  if (self.op['id'] == last_id){
-                    self.op['qty_done'] = qty_done
-                  } else {
-                    self.op['qty_done'] = self.op['product_qty']
-                  }
-                  
-                  if (self.op['picking_id'] != last_picking_id){
-                    self.cargarPick()
-                  }
 
-                  self.cargar = false;
-                  if (self.op['result_package_id']){
-                    self.result_package_id = 0;
-                    self.op_selected['result_package_id'] = self.op['result_package_id'];
-                  }
-                },
-                function () {
-                  self.cargar = false;
-                  self.presentAlert('Error !', 'Se ha producido un error al recargar la operacion');
-                }
-                );
-                      },
-                      function () {
-                          self.cargar = false;
-                          self.presentAlert('Error !', 'Se ha producido un error al recargar la operacion');
-                      }
-                  );
-                  self.cargar = false;
-              }
-          });
-        }
+
           
   presentAlert(titulo, texto) {
     const alert = this.alertCtrl.create({
@@ -265,7 +219,7 @@ export class SlideopPage {
                   let showClose = !value['result'];
                   self.presentToast(value['message'], showClose);
                   self.cargar = false;
-                  self.cargarOP();
+                  self.loadOpObj();
                 },
                 function () {
                   self.cargar = false;
@@ -324,6 +278,7 @@ scanValue(model, scan){
     
   }
 check_state(){
+  return this.check_new_state()
   var self = this;
   self.state = 0;
   /* state == 0 si es la operacion tiene pacquete y se selecciona paquete // si no lo tiene y tienen lote se selecciona lote y ubicación o si no tiene lote producto más ubicación*/
@@ -396,18 +351,486 @@ submit (values){
           function (uid) {
             odoo.call(model, method, values).then(
               function (value) {
-                var lot_id = self.get_id(self.op['lot_id'])
-                var package_id = self.get_id(self.op['package_id'])
-                var result_package_id = self.get_id(self.op['result_package_id'])
-                var location_id = self.get_id(self.op['location_id'])
-                var location_dest_id = self.get_id(self.op['location_dest_id'])
+                
                 //AQUI DECIDO QUE HACER EN FUNCION DE LO QUE RECIBO
-                confirm = self.reconfirm || (self.last_read==value.id)
+                confirm = self.reconfirm || (self.last_read == value.id)
+                
+                self.check_returned_value(value);
+                /*if (self.waiting>=4 && self.op['location_dest_id']['need_check'] && !self.cargar){
+                    self.doOp(self.op['id']);
+                }*/
+                self.scan_id = value;
+                self.myScan.setFocus();
+                return value;
+                },
+              function () {
+                self.cargar = false;
+                self.presentAlert('Falla!', 'Imposible conectarse');
+                }
+              );
+            },
+          function () {
+            self.cargar = false;
+            self.presentAlert('Falla!', 'Imposible conectarse');
+            }
+          );
+        self.cargar = false;
+    
+      }
+    
+      });
+  }
+
+
+  getObjectId(values){
+    var self = this;
+    var model = 'warehouse.app'
+    var method = 'get_object_id'
+    
+    this.storage.get('CONEXION').then((val) => {
+      if (val == null) {
+        console.log('No hay conexión');
+        self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
+      } else {
+          console.log('Hay conexión');
+          var con = val;
+          var odoo = new OdooApi(con.url, con.db);
+          odoo.login(con.username, con.password).then(
+            function (uid) {
+              odoo.call(model, method, values).then(
+                function (value) {
+                  self.scan_id = value; 
+                  return value;
+                  },
+                function () {
+                  self.cargar = false;
+                  self.presentAlert('Falla!', 'Imposible conectarse');
+                  }
+                );
+              },
+            function () {
+              self.cargar = false;
+              self.presentAlert('Falla!', 'Imposible conectarse');
+              }
+            );
+          self.cargar = false;
+      
+        }
+      
+        });
+  }
+
+  SerialtoOp(id, serial, lot_id=false, option='add', qty=0){
+    if (this.check_changes()){return}
+    this.cargar = true
+    var self = this;
+    var model = 'stock.pack.operation'
+    var method = 'SerialtoOp'
+    var values = {'id': id, 'serial': serial, 'option': option, 'qty': qty, 'lot_id': lot_id}
+    this.storage.get('CONEXION').then((val) => {
+
+      if (val == null) {
+        console.log('No hay conexión');
+        self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
+      } 
+      else {
+        console.log('Hay conexión');
+        var con = val;
+        var odoo = new OdooApi(con.url, con.db);
+        odoo.login(con.username, con.password).then(
+          function (uid) {
+            odoo.call(model, method, values).then(
+              function (value) {
+                {setTimeout(() => {
+                  if (Boolean(value['id'])){
+                    self.domain = [['id', '=',id]];  
+                    self.loadOpObj(id)
+                  }
+                  else {
+                    self.presentAlert("Error", value['message'])
+                    self.loadOpObj(id)
+                    //self.navCtrl.push(TreeopsPage, {picking_id: self.op['picking_id'][0]});
+                  }
+                }, 25);}
+
+              },
+              function () {
+                self.cargar = false;
+                self.presentAlert('Falla!', 'Imposible conectarse');
+              }
+                        );
+                    },
+                    function () {
+                        self.cargar = false;
+                        self.presentAlert('Falla!', 'Imposible conectarse');
+                    }
+                );
+                self.cargar = false;
+      }
+    });
+  }
+  
+  get_next_op(id, index){
+
+    var self = this;
+    let domain = []
+    
+    var ops = self.ops.filter(function (op) {
+      return op.pda_done == false && op.id != id}
+    )
+
+    if (ops.length==0) {return []}
+    index = index + 1;
+    if (index > (self.ops.length-1)) {index = 0;};
+    if (self.ops[index].pda_done) {return self.get_next_op(id, index)}
+    return [['id', '=', self.ops[index]['id']]];
+    
+  }
+
+  doOp(id){
+    if (this.check_changes()){return}
+    
+    var self = this;
+    self.cargar = true;
+    var model = 'stock.pack.operation'
+    var method = 'doOp'
+    var values = {'id': id, 'qty_done': self.op['qty_done']}
+    var object_id;
+    this.storage.get('CONEXION').then((val) => {
+
+      if (val == null) {
+        console.log('No hay conexión');
+        self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
+      } else {
+          console.log('Hay conexión');
+          var con = val;
+          var odoo = new OdooApi(con.url, con.db);
+          odoo.login(con.username, con.password).then(
+            function (uid) {
+              odoo.call(model, method, values).then(
+                function (value) {
+                  {setTimeout(() => {
+                    self.ops[self.index]['pda_done'] = true
+                    self.cargar = false;
+                    if (Boolean(value)){
+                      self.domain = [['id', '=',id]];   
+                      self.loadOpObj(id)
+                    }
+                    else {
+                      //self.navCtrl.push(TreeopsPage, {picking_id: self.op['picking_id'][0]});
+                    }
+                  }, 1);}
+
+                },
+                function () {
+                  self.cargar = false;
+                  self.presentAlert('Falla!', 'Imposible conectarse');
+                }
+                          );
+                      },
+                      function () {
+                          self.cargar = false;
+                          self.presentAlert('Falla!', 'Imposible conectarse');
+                      }
+                  );
+                  self.cargar = false;
+              }
+          });
+  }
+
+  addQty(id, qty){
+    
+    this.op['qty_done'] += qty
+
+    let package_qty = this.op['package_id'] && this.op['package_id']['package_qty'] || this.op['qty_done']
+
+    this.op['qty_done'] = Math.max(this.op['qty_done'], 0)
+    this.op['qty_done'] = Math.min(this.op['qty_done'], package_qty)
+
+    this.check_state();
+  }
+
+    
+  inputQty() {
+    if (this.check_changes()){return}
+    var self = this;
+    if (self.waiting < 1 && self.waiting > 4) {return}
+    let alert = this.alertCtrl.create({
+      title: 'Qty',
+      message: 'Cantidad a mover',
+      inputs: [
+        {
+          name: 'qty',
+          placeholder: self.op['qty_done'].toString()
+        },
+       
+      
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          handler: () => {
+            console.log('Cancel clicked');
+          }
+        },
+        {
+          text: 'Save',
+          handler: (data) => {
+            console.log('Saved clicked');
+            console.log(data.qty);
+
+            if (data.qty<0){
+              self.presentAlert('Error!', 'La cantidad debe ser mayor que 0');
+            }
+            else if (data.qty) {
+              self.op['qty_done'] = data.qty
+              self.check_state();
+            }
+            self.input = 0;
+
+          }
+        }
+      ]
+    });
+
+    self.input = alert._state;
+    alert.present();
+  }
+
+
+  addSerial(option='add') {
+    if (this.check_changes()){return}
+    let message = {'add': 'Añadir un número de serie', 'remove': "Eliminar un número de serie", 'qty': "Introduce cantidad"}
+    var self = this;
+    if (self.waiting < 1 && self.waiting > 4) {return}
+    let alert = this.alertCtrl.create({
+      title: 'Nº de serie',
+      message: message['option'],
+      inputs: [
+        {
+          name: 'serial',
+          placeholder: ''
+        },
+       
+      
+      ],
+      buttons: [
+        {
+          text: 'Cancelar',
+          handler: () => {
+            console.log('Cancel clicked');
+          }
+        },
+        {
+          text: 'Aplicar',
+          handler: (data) => {
+            console.log('Saved clicked');
+            console.log(data.serial);
+            self.SerialtoOp(self.op_id, data.serial, false, option, 1)
+            self.input = 0;
+          }
+        }
+      ]
+    });
+
+    self.input = alert._state;
+    alert.present();
+  }   
+
+  showSerial() {
+    var name = "<p>Lista de nº de serie:</p><ul>"
+    for (var op_lot_i in this.op['pack_lot_ids']){
+      let op_lot = this.op['pack_lot_ids'][op_lot_i]
+      name += "<li>" +  op_lot['lot_id']['name'] + "(" + op_lot['qty_todo'] + "/" + op_lot['qty'] + ")</li>" 
+    }
+    name +="</ul>"
+    
+    if (this.waiting < 1 && this.waiting > 4) {return}
+    let alert = this.alertCtrl.create({
+      
+      message: name,
+      inputs: [],
+      buttons: [
+          {
+          text: 'Ok',
+          handler: () => {
+            console.log('Cancel clicked');
+          }
+        },
+      ]
+    });
+
+    this.input = alert._state;
+    alert.present();
+  }   
+
+  loadOpObj(id = 0){
+    this.last_id = this.op_id    
+    var self = this
+    var model = 'warehouse.app'
+    var method = 'get_object_id'
+    if (id==0){
+      id = this.op_id
+    }
+    var values = {'id': id, 'model': 'stock.pack.operation'}
+    self.storage.get('CONEXION').then((val) => {
+      if (val == null) {
+        console.log('No hay conexión');
+        self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
+      } 
+      else {
+        console.log('Hay conexión');
+        var con = val;
+        var odoo = new OdooApi(con.url, con.db);
+        odoo.login(con.username, con.password).then(
+          function (uid) {
+            odoo.call(model, method, values).then(
+              function (res) {
+                if (res['id']!=0){
+                  self.op = res['values']
+                  self.check_loaded_values()
+                  return true;
+                }
+              },
+              function () {
+                self.presentAlert('Falla!', 'Imposible conectarse');
+              }
+            );
+          },
+          function () {
+            self.presentAlert('Falla!', 'Imposible conectarse');
+          }
+        );
+      }
+      
+        });
+  }
+
+  check_loaded_values(){
+    if (this.op['id'] == this.last_id && !Boolean(this.op_selected) && this.op_selected['qty_done']>0.00 ){
+      this.op['qty_done'] = this.op_selected['qty_done']
+    } 
+    else {
+      this.op['qty_done'] = this.op['product_qty']
+    } 
+        
+    if (this.op['result_package_id']){
+      this.result_package_id = 0;
+      this.op_selected['result_package_id'] = this.op['result_package_id'];
+    }
+    this.pick = this.op['picking_id']
+    this.cargar = false
+  }
+
+
+  check_new_state(){
+    if (this.op['tracking']=='none'){
+      return this.check_tracking_none()
+    }
+    else if (this.op['tracking']=='lot'){
+      return this.check_tracking_lot()
+    }
+    else if (this.op['tracking']=='serial'){
+      return this.check_tracking_serial()
+    }
+  } 
+
+  /* 
+  waiting 
+check_tracking_serial(){
+    return this.check_tracking_none
+  }
+    1 >> articulo
+  2 >> package
+  3 >> lote
+  5 >> qty
+  4 >> location_id
+
+  6 >> result_package_id
+  7 >> location_dest_id
+  0 >> Ninguno
+  */
+  check_tracking_serial(){
+    return this.check_tracking_none
+  }
+  check_tracking_lot(){
+    return this.check_tracking_none
+  }
+  
+  check_tracking_none(){
+    let waiting = 1
+    
+    if (Boolean(this.op['package_id']) && !Boolean(this.op_selected['package_id'])){
+      waiting = 6
+    }
+    else if (this.op_selected['qty_done']==0.00){
+      waiting = 5}
+    else if (this.op_selected['qty_done']>0.00)
+      if (this.op['location_id']['need_check'] && !Boolean(this.op_selected['location_id'])){
+        waiting = 4
+      }
+      else {
+        waiting = 6
+      }
+
+    if (waiting==6){
+      if (!this.op['location_id']['need_check']) {
+        if (!Boolean(this.op['result_package_id']) || this.op_selected['result_package_id'] && this.op_selected['result_package_id']['id']!= 0) {
+          waiting = 10
+        }
+      }
+      else if (Boolean(this.op['result_package_id']) && this.op_selected['result_package_id'] && this.op_selected['result_package_id']['id']!= 0){
+          if (Boolean(this.op_selected['location_dest_id'])){
+            waiting = 7
+          }
+          else {
+            waiting =10
+          }
+      }
+    }
+    if (waiting==10){
+      this.cargar = true;
+      this.doOp(this.op_id
+      )}
+    this.waiting = waiting
+  }
+
+  check_returned_value(value){
+    
+  }
+
+
+
+submit2 (values){
+  if (this.check_changes()){return}
+  var self = this
+  var model = 'warehouse.app'
+  var method = 'get_object_id'
+  var confirm = false
+  self.storage.get('CONEXION').then((val) => {
+    if (val == null) {
+      console.log('No hay conexión');
+      self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
+    } else {
+        console.log('Hay conexión');
+        var con = val;
+        var odoo = new OdooApi(con.url, con.db);
+        odoo.login(con.username, con.password).then(
+          function (uid) {
+            odoo.call(model, method, values).then(
+              function (value) {
+                var lot_id = self.op['id'] && self.op['lot_id']['id']
+                var package_id = self.op['package_id'] && self.op['package_id']['id']
+                var result_package_id = self.op['result_package_id'] && self.op['result_package_id']['id']
+                var location_id = self.op['location_id'] && self.op['location_id']['id']
+                var location_dest_id = self.op['location_dest_id'] && self.op['location_dest_id']['id']
+                //AQUI DECIDO QUE HACER EN FUNCION DE LO QUE RECIBO
+                confirm = self.reconfirm || (self.last_read == value.id)
                 self.last_read = value.id
                 if (self.state==0) {
                     // CASO 0.LOTE. LOTE SELECCIONADO
                   if (value.model == 'stock.production.lot' && self.lot_id_change == 0 && value.id == lot_id){
-                      self.op_selected['lot_id'] = value.id;
+                      self.op_selected['lot_id'] = {'id' : value.id, 'name': value.name}
                       
                   }
                   // CASO 0.LOTE.. CAMBIO LOTE
@@ -415,10 +838,10 @@ submit (values){
                     self.lot_id_change == value.id;
                     self.presentToast('Cambiando lote. Repite scan para confirmar');
                   }
-                  // CASO 0.LOTE.. CAMBIO LOTE ONFIRMADO/CANCELADO
+                  // CASO 0.LOTE.. CAMBIO LOTE ONFIRMADO/CANC'id': 310ELADO
                   else if (value.model == 'stock.production.lot' && self.lot_id_change != 0){
                     if (value.id != self.lot_id_change) {
-                      self.op_selected['lot_id'] = value.id;
+                      self.op_selected['lot_id'] = {'id' : value.id, 'name': value.name};
                       self.presentToast('Lote cambiado');
                       self.lot_id_change = 0;
                     }
@@ -432,14 +855,14 @@ submit (values){
                   else if (value.model == 'stock.quant.package' && value.id == package_id) {
                     self.package_id_change = 0;
                     self.op_selected['lot_id'] = self.op['lot_id']
-                    self.op_selected['package_id'] = value.id;  
+                    self.op_selected['package_id'] = {'id' : value.id, 'name': value.name};  
                     self.op_selected['location_id'] = self.op['location_id']                    
                   }
                   //CASO 0. PAQUETE. CAMBIO
                   else if (value.model == 'stock.quant.package' && self.package_id_change == 0 && value.id != package_id) {
                     self.package_id_change = value.id;
-                    self.op_selected['lot_id'] = 0;
-                    self.op_selected['package_id'] = 0;                      
+                    self.op_selected['lot_id'] = {};
+                    self.op_selected['package_id'] = {};                      
                   }
                   //CASO 0. PAQUETE. CAMBIO CONFIRMADO
                   else if (value.model == 'stock.quant.package' && self.package_id_change == value.id) {
@@ -450,7 +873,7 @@ submit (values){
                   }
                   //CASO 0. PAQUETE. CAMBIO CANCELADO/NUEVO CAMBIO
                   else if (value.model == 'stock.quant.package' && self.package_id_change != 0 && self.package_id_change != value.id){
-                    if (value.id==self.op['package_id']){
+                    if (value.id == package_id){
                       self.package_id_change = 0;
                       self.op_selected['lot_id'] = self.op['lot_id']
                       self.op_selected['location_id'] = self.op['location_id']
@@ -467,8 +890,8 @@ submit (values){
                   // CASO 0. UBICACION. CONFIRMADA
 
                   else if (value.model == 'stock.location' && value.id == location_id && self.location_id_change == 0){
-                    self.op_selected ['location_id'] = value.id;
-                  }
+                    self.op_selected ['location_id'] = {'id' : value.id, 'name': value.name};
+                    }
 
                   // CASO 3. CAMIO DE UBICACION
                   else if (value.model == 'stock.location' && package_id == false && self.location_id_change == 0 && value.id != location_id) {
@@ -553,16 +976,16 @@ submit (values){
                       self.presentToast('Cambio de paquete de destino cancelado')
                     }
                   }
-                  else if (self.op['location_dest_id_need_check'] && !Boolean(self.op['result_package_id']))
+                  else if (self.op['location_dest_id']['need_check'] && !Boolean(self.op['result_package_id']))
                     { self.cargar = true;
                       self.doOp(self.op['id']);
                     }
                   // CASO 11. DESTINO + UBICACION DESTINO (<>) => CONFIRMA NUEVO UBICACION DESTINO >> CAMBIO DESTINO EN OP + CARGAR OP + CARGAR SLIDES
                 }
                 self.check_state();
-                if (self.waiting>=4 && self.op['location_dest_id_need_check'] && !self.cargar){
+                /*if (self.waiting>=4 && self.op['location_dest_id']['need_check'] && !self.cargar){
                     self.doOp(self.op['id']);
-                }
+                }*/
                 self.scan_id = value;
                 self.myScan.setFocus();
                 return value;
@@ -584,165 +1007,4 @@ submit (values){
     
       });
   }
-
-
-  getObjectId(values){
-    var self = this;
-    var model = 'warehouse.app'
-    var method = 'get_object_id'
-    
-    this.storage.get('CONEXION').then((val) => {
-      if (val == null) {
-        console.log('No hay conexión');
-        self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
-      } else {
-          console.log('Hay conexión');
-          var con = val;
-          var odoo = new OdooApi(con.url, con.db);
-          odoo.login(con.username, con.password).then(
-            function (uid) {
-              odoo.call(model, method, values).then(
-                function (value) {
-                  self.scan_id = value; 
-                  return value;
-                  },
-                function () {
-                  self.cargar = false;
-                  self.presentAlert('Falla!', 'Imposible conectarse');
-                  }
-                );
-              },
-            function () {
-              self.cargar = false;
-              self.presentAlert('Falla!', 'Imposible conectarse');
-              }
-            );
-          self.cargar = false;
-      
-        }
-      
-        });
-      
-   
-    }
- 
-    get_next_op(id, index){
-
-      var self = this;
-      let domain = []
-      
-      var ops = self.ops.filter(function (op) {
-        return op.pda_done == false && op.id != id}
-      )
-
-      if (ops.length==0) {return []}
-      index = index + 1;
-      if (index > (self.ops.length-1)) {index = 0;};
-      if (self.ops[index].pda_done) {return self.get_next_op(id, index)}
-      return [['id', '=', self.ops[index]['id']]];
-      
-    }
-
-    doOp(id){
-      if (this.check_changes()){return}
-      
-      var self = this;
-      self.cargar = true;
-      var model = 'stock.pack.operation'
-      var method = 'doOp'
-      var values = {'id': id, 'qty_done': self.op['qty_done']}
-      var object_id;
-      this.storage.get('CONEXION').then((val) => {
-  
-        if (val == null) {
-          console.log('No hay conexión');
-          self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
-        } else {
-            console.log('Hay conexión');
-            var con = val;
-            var odoo = new OdooApi(con.url, con.db);
-            odoo.login(con.username, con.password).then(
-              function (uid) {
-                odoo.call(model, method, values).then(
-                  function (value) {
-                    {setTimeout(() => {
-                      self.ops[self.index]['pda_done'] = true
-                      self.cargar = false;
-                      if (Boolean(value)){
-                        self.domain = [['id', '=',value]];   
-                        self.cargarOP()
-                      }
-                      else {
-                        //self.navCtrl.push(TreeopsPage, {picking_id: self.op['picking_id'][0]});
-                      }
-                    }, 1);}
-
-                  },
-                  function () {
-                    self.cargar = false;
-                    self.presentAlert('Falla!', 'Imposible conectarse');
-                  }
-                            );
-                        },
-                        function () {
-                            self.cargar = false;
-                            self.presentAlert('Falla!', 'Imposible conectarse');
-                        }
-                    );
-                    self.cargar = false;
-  
-               
-                }
-                
-            });
-    }
-  
-
-  inputQty() {
-    if (this.check_changes()){return}
-    var self = this;
-    if (self.waiting < 1 && self.waiting > 4) {return}
-    let alert = this.alertCtrl.create({
-      title: 'Qty',
-      message: 'Cantidad a mover',
-      inputs: [
-        {
-          name: 'qty',
-          placeholder: self.op['qty_done'].toString()
-        },
-       
-      
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          handler: () => {
-            console.log('Cancel clicked');
-          }
-        },
-        {
-          text: 'Save',
-          handler: (data) => {
-            console.log('Saved clicked');
-            console.log(data.qty);
-
-            if (data.qty<0){
-              self.presentAlert('Error!', 'La cantidad debe ser mayor que 0');
-            }
-            else if (data.qty) {
-              self.op['qty_done'] = data.qty
-              self.check_state();
-            }
-            self.input = 0;
-
-          }
-        }
-      ]
-    });
-
-    self.input = alert._state;
-    alert.present();
-  }
-        
-    
 }

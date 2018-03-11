@@ -29,10 +29,11 @@ declare var OdooApi: any
 })
 export class LotPage {
 
+  //product_fields = ['display_name', 'ean13', 'default_code', 'uom_id', 'qty_available', 'default_stock_location_id', 'track_all', 'pallet_ul', 'box_ul', 'categ_id', 'quant_ids']
   model
   id
   item
-  cargar
+  cargar 
   constructor(public navCtrl: NavController, public toastCtrl: ToastController, public storage: Storage, public navParams: NavParams, public alertCtrl: AlertController) {
     this.model = this.navParams.data.model;
     this.id = this.navParams.data.id;
@@ -110,7 +111,7 @@ open(model, id){
         break
       case 'product':
         page = ProductPage;
-        break
+        break      
     }
     if (page && id){
       this.navCtrl.push(page, {model: model, id: id});
