@@ -17,6 +17,7 @@ import { LotPage} from '../pages/lot/lot'
 import { PackagePage} from '../pages/package/package'
 import { LocationPage} from '../pages/location/location'
 
+//import { SerialnumberPage } from '../pages/serialnumber/serialnumber'
 
 import { AuxProvider } from '../providers/aux/aux'
 import { AppSoundProvider } from '../providers/app-sound/app-sound'

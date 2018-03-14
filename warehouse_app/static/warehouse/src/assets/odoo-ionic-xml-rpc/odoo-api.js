@@ -10,7 +10,7 @@ this.odoo_uid = false;
 this.odoo_user = false;
 this.odoo_password = false;
 this.context = {'lang': 'es_ES'}, //odoo_api,
-    
+this.timeout = 50000    
 this.login = function(user, password) {
     this.odoo_user = user;
     this.odoo_password = password;
@@ -23,7 +23,7 @@ this.login = function(user, password) {
             url: odoo_api.odoo_host + 'xmlrpc/common',
             methodName: 'login',
             params: [odoo_api.odoo_db, user, password],
-            timeout: 10000,
+            timeout: odoo_api.timeout,
             context: odoo_api,
             success: function(response, status, jqXHR) {
                 if (response[0]) {
@@ -58,7 +58,7 @@ this.search = function(model, domain) {
             methodName: 'execute',
             params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
                      model, 'search', domain],
-            timeout: 10000,
+            timeout: odoo_api.timeout,
             context: odoo_api.context,
             success: function(response, status, jqXHR) {
                 if (response[0]) {
@@ -91,7 +91,7 @@ var promise = new Promise(function(resolve, reject) {
         methodName: 'execute',
         params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
                  model, 'search_read', domain, fields, offset, limit, order, odoo_api.context],
-        timeout: 10000,
+        timeout: odoo_api.timeout,
         context: odoo_api.context,//{'lang': 'es_ES'}, //odoo_api,
         success: function(response, status, jqXHR) {
             if (response[0]) {
@@ -121,7 +121,7 @@ this.read = function(model, ids, fields) {
             methodName: 'execute',
             params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
                      model, 'read', ids, fields, limit, order, odoo_api.context],
-            timeout: 10000,
+            timeout: odoo_api.timeout,
             context: odoo_api.context,
             success: function(response, status, jqXHR) {
                 if (response[0]) {
@@ -150,7 +150,7 @@ this.write = function(model, id, data) {
             methodName: 'execute',
             params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
                      model, 'write', id, data],
-            timeout: 10000,
+            timeout: odoo_api.timeout,
             context: odoctx, //o_api,
             success: function(response, status, jqXHR) {
                 if (response[0]) {
@@ -179,7 +179,7 @@ this.create = function(model, data) {
             methodName: 'execute',
             params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
                      model, 'create', data],
-            timeout: 10000,
+            timeout: odoo_api.timeout,
             context: ctx,
             success: function(response, status, jqXHR) {
                 if (response[0]) {
@@ -208,7 +208,7 @@ this.delete = function(model, ids) {
             methodName: 'execute',
             params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
                      model, 'unlink', ids],
-            timeout: 10000,
+            timeout: odoo_api.timeout,
             context: odoo_api,
             success: function(response, status, jqXHR) {
                 if (response[0]) {
@@ -238,7 +238,7 @@ this.call = function(model, method, values) {
             methodName: 'execute',
             params: [odoo_api.odoo_db, odoo_api.odoo_uid, odoo_api.odoo_password,
                     model, method, values, odoo_api.context],
-            timeout: 10000,
+            timeout: odoo_api.timeout,
             context: odoo_api.context,
             success: function(response, status, jqXHR) {
                 if (response[0]) {

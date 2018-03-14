@@ -1,14 +1,14 @@
 webpackJsonp([2],{
 
-/***/ 304:
+/***/ 305:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TreeopsPageModule", function() { return TreeopsPageModule; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SlideopPageModule", function() { return SlideopPageModule; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__treeops__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__slideop__ = __webpack_require__(110);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -18,23 +18,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 
-var TreeopsPageModule = (function () {
-    function TreeopsPageModule() {
+var SlideopPageModule = (function () {
+    function SlideopPageModule() {
     }
-    TreeopsPageModule = __decorate([
+    SlideopPageModule = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["I" /* NgModule */])({
             declarations: [
-                __WEBPACK_IMPORTED_MODULE_2__treeops__["a" /* TreeopsPage */],
+                __WEBPACK_IMPORTED_MODULE_2__slideop__["a" /* SlideopPage */],
             ],
             imports: [
-                __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["e" /* IonicPageModule */].forChild(__WEBPACK_IMPORTED_MODULE_2__treeops__["a" /* TreeopsPage */]),
+                __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["e" /* IonicPageModule */].forChild(__WEBPACK_IMPORTED_MODULE_2__slideop__["a" /* SlideopPage */]),
             ],
         })
-    ], TreeopsPageModule);
-    return TreeopsPageModule;
+    ], SlideopPageModule);
+    return SlideopPageModule;
 }());
 
-//# sourceMappingURL=treeops.module.js.map
+//# sourceMappingURL=slideop.module.js.map
 
 /***/ })
 

@@ -43,17 +43,17 @@
 
         <ion-item text-wrap *ngFor="let pick of picks; trackBy: index;" class="all0" >
             <ion-label></ion-label>
-            <button ion-button item-start class="buttonProduct w75" (click)="showtreeop_ids(pick.id)" [ngClass]="{'pìckdone': pick.state=='done'}">
-              {{pick.name}} <({{pick.state}} {{pick.picking_type_id_name}})>
+            <button ion-button item-start class="buttonProduct w75" (click)="showtreeop_ids(pick.id, pick.type)" [ngClass]="{'pìckdone': pick.state=='done'}">
+              {{pick.name}} <({{pick.state}} {{pick.picking_type_id_name}} {{pick.type}})>
             </button>  
         
-            <button ion-button icon-only item-end  (click)="doAsign(pick.id)" [hidden]="pick.user_id">Asignar
+            <button ion-button icon-only item-end  (click)="doAsign(pick.id, pick.type)" [hidden]="pick.user_id">Asignar
                 
             </button>  
-            <button ion-button icon-only item-end  (click)="doDeAsign(pick.id)" [hidden]="!pick.user_id">Liberar
+            <button ion-button icon-only item-end  (click)="doDeAsign(pick.id, pick.type)" [hidden]="!pick.user_id">Liberar
                 
             </button>
-            <button ion-button icon-only item-end  (click)="doTransfer(pick.id)" [hidden]='!pick.allow_transfer'>Validar
+            <button ion-button icon-only item-end  (click)="doTransfer(pick.id, pick.type)" [hidden]='!pick.allow_transfer'>Validar
             </button>
         </ion-item>
     </ion-list> 

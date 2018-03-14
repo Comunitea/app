@@ -7,6 +7,23 @@ from odoo import api, models, fields,_
 import odoo.addons.decimal_precision as dp
 from odoo.exceptions import ValidationError
 
+class StockPackOperationLot(models.Model):
+
+    _inherit = 'stock.pack.operation.lot'
+
+    @api.model
+    def pda_refresh_lots(self, vals):
+        id = vals.get('id', False)
+        qty_done = vals.get('qty_done', 0.00)
+        pack_lots = vals.get('pack_lot_ids', [])
+
+        for lot in pack_lots:
+            pack_lot = self.browse(lot['id'])
+            pack_lot.qty = lot['qty']
+
+
+        if pack_lot:
+            pack_lot.operation_id.write({'qty_done': sum(pack_lot.operation_id.pack_lot_ids.mapped('qty'))})
 
 
 class StockPackOperation (models.Model):
@@ -34,11 +51,45 @@ class StockPackOperation (models.Model):
     total_qty = fields.Float('Real qty', compute=get_app_names, multi=True)
     #real_lot_id = fields.Many2one('stock.production.lot', 'Real lot', compute=get_real_lot_id, store=True)
     tracking = fields.Selection(related='pda_product_id.tracking')
+    picking_order = fields.Integer('Picking order', default = 0)
+
+    
+    def get_picking_order(self, vals):
+        location_id = vals.get('location_id', False)
+        location_dest_id = vals.get('location_dest_id', False)
+        
+        loc = self.env['stock.location'].search_read([('picking_order', '!=', 0), ('id', 'in',(location_id, location_dest_id))], ['need_check', 'picking_order'], limit=1)
+
+        if not loc:
+            return 0
+        elif len(loc) == 1:
+            return loc[0]['picking_order']
+        elif loc[0]['id'] == location_id:
+            return loc[0]['picking_order']
+        elif loc[1]['id'] == location_id:
+            return loc[1]['picking_order']
+        elif loc[0]['id'] == location_dest_id:
+            return loc[0]['picking_order']
+        elif loc[1]['id'] == location_dest_id:
+            return loc[1]['picking_order']
+        return 0
+
+
+    @api.multi
+    def write(self, vals):
+        field_list = vals.keys()
+        if ('location_id' in field_list or 'location_dest_id' in field_list) and not 'picking_order' in field_list:
+            vals['picking_order'] = self.get_picking_order(vals)
+        return super(StockPackOperation, self).write(vals)
+
+    @api.model
+    def create(self, vals):
+        vals['picking_order'] = self.get_picking_order(vals)
+        return super(StockPackOperation, self).create(vals)
 
 
     def change_package_id_from_pda(self, id, new_package_id):
         ctx = self._context.copy()
-
         return self.browse(id).with_context(ctx.update(from_pda=True)).change_package_id(new_package_id)
 
 
@@ -201,8 +252,7 @@ class StockPackOperation (models.Model):
 
     @api.model
     def create_new_op_from_pda(self, quant_tupple, result_package_id=False):
-        import ipdb;
-        ipdb.set_trace()
+        
 
         quant = quant_tupple[0]
         product_qty = quant_tupple[1]
@@ -251,7 +301,7 @@ class StockPackOperation (models.Model):
 
     @api.multi
     def put_in_pack(self):
-        for op in self.filtered(lambda x: not x.result_package_id and op.location_dest_id.usage == 'internal'):
+        for op in self.filtered(lambda x: not x.result_package_id and x.location_dest_id.usage == 'internal'):
             op.result_package_id = self.env['stock.quant.package'].create(op.get_new_pack_values())
 
     @api.one
@@ -400,18 +450,24 @@ class StockPackOperation (models.Model):
 
 
     def changeSerialQty(self, vals):
+
         lot_id = vals.get('lot_id', False)
         qty = vals.get('qty', False)
-        if lot_id & qty:
+        if lot_id and qty:
             lot_id = self.env['stock.pack.operation.lot'].browse(lot_id)
             if not lot_id:
                 return False
+            if lot_id.qty + qty <= 0.00:
+                lot_id.unlink()
+                return {'id': -1, 'message': u'Lote eliminado'}
+            elif lot_id.qty + qty > lot_id.lot_id.product_qty:
+                return {'id': False, 'message': u'El lote tiene %s %s'%(lot_id.lot_id.product_qty, lot_id.lot_id.product_id.uom_id)}
 
-            lot_id.self.action_add_quantity(qty)
-        return True
+            lot_id.action_add_quantity(qty)
+        return {'id': lot_id.id}
 
     @api.model
-    def SerialtoOp(self,vals):
+    def SerialtoOp(self, vals):
 
         id = vals.get('id', False)
         if not id:
@@ -422,34 +478,52 @@ class StockPackOperation (models.Model):
         product_id = vals.get('product_id', False)
         lot_id = vals.get('lot_id', False)
         option = vals.get('option', 'add')
-        if option == 'qty' and lot_id:
-            return op.changeSerialQty(vals)
+        no_name = vals.get('no_name', False)
+
+        res = {'id': 0, 'message': 'Error'}
+
         if not product_id:
             product_id = op.pda_product_id.id
-        if option == 'remove' and serial:
+
+        # Cambiar cantidad
+        if option == 'qty' and lot_id:
+            res = op.changeSerialQty(vals)
+
+        # Eliminar lote
+        elif option == 'remove' and serial:
 
             lot = self.env['stock.production.lot'].search_read([('product_id', '=', product_id), ('name', '=', serial)],['id'],limit = 1)
             lot_id = lot and lot['id']
             self.env['stock.pack.operation.lot'].search([('operation_id', '=', id), ('lot_id', '=', lot_id)]).unlink()
-            return lot_id
+            res = {'id': lot_id}
 
-        if option == 'add' :
-            if not serial:
-                return False
+        #Añadir lote
+        elif option == 'add':
+            if not serial and no_name:
+                res = {'id': 0, 'message': 'Error'}
 
+            else:
+                domain =[('product_id', '=', product_id)]
+                if serial:
+                    domain += [('name', '=', serial)]
 
+                lot_id = self.env['stock.production.lot'].search(domain, limit = 1)
 
-            lot_id = self.env['stock.production.lot'].search([('product_id', '=', product_id), ('name', '=', serial)], limit = 1)
-            if not lot_id:
-                new_lot_vals = {'name': serial, 'product_id': product_id}
-                lot_id = self.env['stock.production.lot'].create(new_lot_vals)
+                if not lot_id:
+                    new_lot_vals = {'product_id': product_id}
 
-            if lot_id:
-                new_lot_ids_vals ={'operation_id': id , 'lot_id': lot_id.id, 'lot_name': lot_id.name, 'qty': 1}
-                self.env['stock.pack.operation.lot'].create(new_lot_ids_vals)
+                    if serial:
+                        new_lot_vals.update(name=serial)
+                    lot_id = self.env['stock.production.lot'].create(new_lot_vals)
 
-            return lot_id.id
+                if lot_id:
+                    new_lot_ids_vals ={'operation_id': id, 'lot_id': lot_id.id, 'lot_name': lot_id.name, 'qty': 1}
+                    self.env['stock.pack.operation.lot'].create(new_lot_ids_vals)
+                    res = {'id': lot_id.id}
 
+        if lot_id:
+            op.save()
+            return res
 
 
 

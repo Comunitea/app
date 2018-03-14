@@ -10,7 +10,7 @@
       <button ion-button icon-only menuToggle>
         <ion-icon name="menu"></ion-icon>
       </button>
-      <ion-title>{{ pick['name']}} [{{ pick['remaining_ops'] }} / {{pick['pack_operation_count']}}]</ion-title>
+      <ion-title>{{ pick && pick.name }} [{{ pick['remaining_ops'] }} / {{pick['pack_operation_count']}}]</ion-title>
       <ion-buttons end>
         <button ion-button (click)="goHome()">
           <ion-icon name="home"></ion-icon>
@@ -31,28 +31,26 @@
   </div>
 
   <ion-list [hidden] = "cargar" class="noPadding">
-    <ion-item-group>
+    <ion-item-group class='back_light'>
       
-      <ion-item no-lines class='all0'>   
+      <ion-item no-lines class='all0 back_light'>   
         <ion-label></ion-label>
+        <ion-badge item-start color="primary">{{pick.state && pick.state.name}} </ion-badge>
         <ion-badge item-end color='odoo' (click)="seeAll()">{{whatOps}}</ion-badge>
         <ion-badge item-end (click)="doTransfer(pick.id)" [hidden]='pick.state == "done" || pick.done_ops == 0' color='odoo'>Validar</ion-badge>
-        <!--button ion-button item-end (click)="doAssign(false)" [hidden]='pick.user_id'>Liberar</button-->
         <ion-badge item-end (click)="doAssign(pick.id)" [hidden]='!pick.user_id' color='odoo'>Asignarme</ion-badge>
-        <!--button ion-button item-end (click)="refresh(pick.id)">Refrescar</button-->
-      </ion-item>
-      <ion-item no-lines class='all0'>   
-        <ion-label></ion-label>
         
-        <ion-badge item-start color="odoo" (click)="open('stock.location', pick['location_id'] && pick['location_id'].id)">
-          {{pick['location_id'] && pick.location_id.name}}
-        </ion-badge>       
-        {{aux.location_badge}}
-        <ion-badge item-start color="odoo" (click)="open('stock.location', pick['location_dest_id'] && pick['location_dest_id'].id)">
-          {{ pick['location_dest_id'] && pick.location_dest_id.name}}
-        </ion-badge>          
-        <ion-badge item-start color="primary">{{pick.state && pick.state.name}} </ion-badge>
+      </ion-item>
 
+      <ion-item no-lines class='all0'>   
+          <ion-label></ion-label>
+          <ion-badge item-start color="odoo" (click)="open('stock.location', pick['location_id'] && pick['location_id'].id)">
+            {{pick['location_id'] && pick.location_id.name}}
+          </ion-badge>       
+          {{aux.location_badge}}
+          <ion-badge item-start color="odoo" (click)="open('stock.location', pick['location_dest_id'] && pick['location_dest_id'].id)">
+            {{ pick['location_dest_id'] && pick.location_dest_id.name}}
+          </ion-badge>          
         </ion-item>
     </ion-item-group>    
     
@@ -60,7 +58,7 @@
       <ion-item-group [hidden] = "whatOps=='Pendientes' && item.qty_done">
         <ion-item no-lines class="all0">
           <ion-label></ion-label>
-          <button ion-button item-end (click)="openOp(item.id, item.index)" class='buttonProduct w100'> {{item.pda_product_id.name || ''}}</button>
+          <button ion-button item-end (click)="openOp(item.id, item.index)" class='buttonProduct w100'> {{item.pda_product_id && item.pda_product_id.name || ''}}</button>
         </ion-item>
         <ion-item class="all0">
           <ion-label></ion-label>
@@ -70,8 +68,12 @@
           <ion-select class ="w33" [hidden]="item.tracking != 'serial'" placeholder ="Nº de serie">
             <ion-option *ngFor="let pack_lot of item.pack_lot_ids; trackBy: index;" value="pack_lot.id">{{ pack_lot.lot_id.name}}</ion-option>
           </ion-select>
-          <ion-badge [hidden]="item.tracking != 'serial'" item-end class="ion-info" color='danger'[ngClass]="{'badge_0': item.qty_done}">{{ item.product_qty - item.qty_done }} {{item.product_uom && item.product_uom.name}}</ion-badge> 
-          <ion-badge [hidden]="item.tracking == 'serial'" item-end class="ion-info" color='danger'[ngClass]="{'badge_0': item.pda_done}">{{ item.product_qty }} {{item.product_uom && item.product_uom.name}}</ion-badge> 
+          <ion-badge [hidden]="item.tracking != 'serial'" item-end class="ion-info w33" color='danger'[ngClass]="{'badge_0': item.qty_done}">
+            {{ (item.pda_done && item.qty_done) || item.product_qty }}  {{item.product_uom_id && item.product_uom_id.name}}
+          </ion-badge> 
+          <ion-badge [hidden]="item.tracking == 'serial'" item-end class="ion-info w33" color='danger'[ngClass]="{'badge_0': item.pda_done}">
+            {{ (item.pda_done && item.qty_done) || item.product_qty }}  {{item.product_uom_id && item.product_uom_id.name}}
+          </ion-badge> 
         </ion-item>
       </ion-item-group>
     </ion-item-group>

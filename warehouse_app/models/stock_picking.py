@@ -3,9 +3,9 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo import api, models, fields
-
+import time
 from odoo.exceptions import ValidationError
-
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 WAREHOUSE_STATES = [
     ('waiting', 'Waiting assigment'),
     ('assigned', 'Assigned'),
@@ -28,6 +28,34 @@ class StockPickingType(models.Model):
 
     show_in_pda = fields.Boolean("Show in PDA")
     short_name = fields.Char("Short name in PDA")
+
+    @api.multi
+    def _compute_picking_count(self):
+        ## TODO ADAPTAR PARA USAR CON WAVE
+        # TDE TODO count picking can be done using previous two
+
+        domains = {
+            'count_picking_draft': [('state', '=', 'draft')],
+            'count_picking_waiting': [('state', 'in', ('confirmed', 'waiting'))],
+            'count_picking_ready': [('state', 'in', ('assigned', 'partially_available'))],
+            'count_picking': [('state', 'in', ('assigned', 'waiting', 'confirmed', 'partially_available'))],
+            'count_picking_late': [('min_date', '<', time.strftime(DEFAULT_SERVER_DATETIME_FORMAT)),
+                                   ('state', 'in', ('assigned', 'waiting', 'confirmed', 'partially_available'))],
+            'count_picking_backorders': [('backorder_id', '!=', False),
+                                         ('state', 'in', ('confirmed', 'assigned', 'waiting', 'partially_available'))],
+        }
+        for field in domains:
+            data = self.env['stock.picking'].read_group(domains[field] +
+                                                        [('state', 'not in', ('done', 'cancel')),
+                                                         ('picking_type_id', 'in', self.ids)],
+                                                        ['picking_type_id'], ['picking_type_id'])
+            count = dict(
+                map(lambda x: (x['picking_type_id'] and x['picking_type_id'][0], x['picking_type_id_count']), data))
+            for record in self:
+                record[field] = count.get(record.id, 0)
+        for record in self:
+            record.rate_picking_late = record.count_picking and record.count_picking_late * 100 / record.count_picking or 0
+            record.rate_picking_backorders = record.count_picking and record.count_picking_backorders * 100 / record.count_picking or 0
 
 
 class StockPicking(models.Model):
@@ -71,6 +99,23 @@ class StockPicking(models.Model):
     remaining_ops = fields.Integer('Remining ops', compute="_compute_ops", multi=True)
     ops_str = fields.Char('Str ops', compute="_compute_ops", multi=True)
     partner_id_name = fields.Char(related='partner_id.display_name')
+    
+    wave_id = fields.Many2one(
+        'stock.picking.wave', string='Picking Wave',
+        states={'done': [('readonly', True)]},
+        help='Picking wave associated to this picking')
+
+    def set_picking_order(self):
+        return True
+        
+    @api.multi
+    def send_pick_to_pda(self):
+        for pick in self: 
+            if pick.state in ('assigned', 'partially_available'):
+                pick.picking_ids.set_picking_order()
+                pick.state ="assigned"
+            else:
+                raise ValidationError (_("Pick state not valid"))
 
 
     @api.multi
@@ -101,9 +146,15 @@ class StockPicking(models.Model):
             pick.do_transfer()
             return True
         return False
+    
+    
+    @api.multi
+    def action_cancel(self):
+        super(StockPicking, self).action_cancel()
+        self.write({'wave_id': False})
+        return True
 
-
-
+    
     @api.model
     def change_pick_value(self, vals):
         print  "------------------- Cambiar valores en las albaranes ----------------\n%s"%vals
@@ -112,7 +163,7 @@ class StockPicking(models.Model):
         id = vals.get('id', False)
         pick = self.browse(id)
 
-        if field == 'user_id' and (not pick.user_id or pick.user_id.id == self._uid):
+        if field == 'user_id' and (not pick.user_id or pick.user_id.id == self._uid) and pick.wave_id == False:
             pick.write({'user_id': value})
         else:
             return False
@@ -120,8 +171,6 @@ class StockPicking(models.Model):
 
     @api.model
     def _prepare_pack_ops(self, quants, forced_qties):
-
-
         if not self.picking_type_id.show_in_pda:
             return super(StockPicking, self)._prepare_pack_ops(quants,forced_qties)
 

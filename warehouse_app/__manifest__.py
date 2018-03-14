@@ -17,10 +17,10 @@
     "data": [
         'security/ir.model.access.csv',
         'views/stock_picking.xml',
+        'views/stock_picking_wave.xml',
         'views/stock_location.xml',
         'views/stock_quant_package.xml',
         'views/stock_location_rack.xml',
         'views/stock_move.xml'
-
     ],
 }

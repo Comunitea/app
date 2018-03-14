@@ -1,5 +1,5 @@
 <!--
-  Generated template for the SerialnumberPage page.
+  Generated template for the ProductPage page.
 
   See http://ionicframework.com/docs/components/#navigation for more info on
   Ionic pages and navigation.
@@ -7,12 +7,46 @@
 <ion-header>
 
   <ion-navbar>
-    <ion-title>serialnumber</ion-title>
+    <ion-title>{{ (op.product_id.tracking.value == 'serial') && "Nº de serie" || (op.product_id.tracking.value) == 'lot' && "Lotes" }}</ion-title>
   </ion-navbar>
 
 </ion-header>
+<ion-content>
+    <div *ngIf="!cargar" style="text-align: center">    
+      <ion-spinner name="circles"></ion-spinner><br>
+      <b>Cargando...</b>
+    </div>
 
+    <ion-list *ngIf="cargar" class="all0">
+      <ion-item-group> 
+        <ion-item class="all0">
+            <ion-badge item-end class="ion-info w100" >
+                {{op.product_id.display_name}} {{op.product_id.tracking.value}}
+            </ion-badge>
+        </ion-item>
+      </ion-item-group>    
 
-<ion-content padding>
+      <ion-item-group [hidden] = "!pack_lot_ids">
+        <ion-item *ngFor="let lot of pack_lot_ids; trackBy: index;" no-lines class="all0">
+          <ion-label></ion-label>
+        
+          <ion-badge  item-start color="odoo" class="ion-info w50" (click)="open('lot', lot['lot_id']['id'])">
+            {{lot['lot_id']['name']}}
+          </ion-badge>
+          <ion-badge item-start color="white" class="ion-info w30" (click)="inputQty()">
+            {{lot['qty']}} {{op.product_id.uom_id.name}}
+          </ion-badge>
+          <button ion-button outline item-end [hidden]="op.pda_done || op.product_id.tracking.value == 'serial'" (click)="addQty(lot.id, 1.00)" ><ion-icon name="add"></ion-icon></button>
+          <button ion-button outline item-end [hidden]="op.pda_done" (click)="addQty(lot.id, -1.00)"><ion-icon name="remove"></ion-icon></button>
+        </ion-item>
+      </ion-item-group>
+      <ion-item>
+        <button ion-button item-end color="odoo" class="w33" (click)="addSerial('add')">Nuevo</button>
+        <button ion-button item-end color="odoo" class="w33" (click)="save_close()">Guardar</button>      
+        <button ion-button item-end color="danger" class ="w33" (click)="cancelar()">Cerrar</button>    
+      </ion-item>        
+    </ion-list>
 
+    
+    <!--button ion-button color="danger" full (click)="cancelar()">Cancelar</button-->
 </ion-content>

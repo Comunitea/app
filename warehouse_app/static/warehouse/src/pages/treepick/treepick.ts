@@ -45,7 +45,7 @@ export class TreepickPage {
     this.domain_types = []
     this.filter_user = this.auxProvider.filter_user
     this.domain_state = ['state', 'in', this.states_show]
-    this.fields = ['id', 'name', 'state', 'partner_id_name', 'location_id_name', 'location_dest_id_name', 'picking_type_id_name', 'user_id', 'allow_validate'];
+    this.fields = ['id', 'name', 'state', 'partner_id', 'location_id', 'location_dest_id', 'picking_type_id', 'user_id', 'allow_validate'];
     this.get_picking_types();
     this.filter_picks(0) ;
     }
@@ -59,43 +59,58 @@ export class TreepickPage {
     self.storage.get('CONEXION').then((val) => {
       if (val == null) {
           self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
-      } else {
-          var con = val;
-          var domain = [];
-          domain.push(['pack_operation_exist', '!=', false])
-          
-          var odoo = new OdooApi(con.url, con.db);
-          odoo.login(con.username, con.password).then(
-            function (uid) {
-              self.uid = uid;
-              if (self.domain_state!=[]) {domain.push(self.domain_state);}
-              if (self.domain_types!=[]) {domain.push(self.domain_types);}
-              if (self.auxProvider.filter_user=='assigned') {domain.push(['user_id', '=', uid]);} else {domain.push(['user_id','=', false]);}
-              //domain = [self.domain_types]
-              console.log(domain)
-              odoo.search_read('stock.picking', domain, self.fields, 0, 0).then(
-                function (value) {
-                  self.picks=[];
-                  for (var key in value) {
-                    self.picks.push(value[key]);
-                  }
-                  self.cargar = false;
-                  self.storage.set('stock.picking', value);
-                },
-                function () {
-                  self.presentAlert('Falla!', 'Imposible conectarse');
+      } 
+      else {
+        var con = val;
+        var domain = [];
+        domain.push(['pack_operation_exist', '!=', false])
+        
+        var odoo = new OdooApi(con.url, con.db);
+        odoo.login(con.username, con.password).then(
+          function (uid) {
+            self.uid = uid;
+            if (self.domain_state!=[]) {domain.push(self.domain_state);}
+            if (self.domain_types!=[]) {domain.push(self.domain_types);}
+            if (self.auxProvider.filter_user=='assigned') {domain.push(['user_id', '=', uid]);} else {domain.push(['user_id','=', false]);}
+            //domain = [self.domain_types]
+            console.log(domain)
+            self.picks=[];
+            self.domain = domain
+            odoo.search_read('stock.picking.wave', domain, self.fields, 0, 0).then(
+              function (value) {
+                for (var key in value) {
+                  value[key]['type'] ='stock.picking.wave'
+                  self.picks.push(value[key]);
                 }
-                          );
-                      },
-                      function () {
-                          self.presentAlert('Falla!', 'Imposible conectarse');
-                      }
-                  );
-                  
-              }
-          });
-      
+                self.domain.push(['wave_id', '=', false]) 
+                console.log(domain)
+                odoo.search_read('stock.picking', self.domain, self.fields, 0, 0).then(
+                  function (value) {
+                    for (var key in value) {
+                      value[key]['type'] ='stock.picking'
+                      self.picks.push(value[key]);
+                    }
+                    self.cargar = false;
+                    
+                  },
+                  function () {
+                    self.presentAlert('Falla!', 'Imposible conectarse');
+                  }
+                );
 
+              },
+              function () {
+                self.presentAlert('Falla!', 'Imposible conectarse');
+              }
+            );
+          },
+          function () {
+            self.presentAlert('Falla!', 'Imposible conectarse');
+          }
+        );
+                
+      }
+    });
   }        
 get_picking_types2(){
   this.storage.get('stock.picking.type').then((val) => {
@@ -167,24 +182,23 @@ presentAlert(titulo, texto) {
 ionViewDidLoad() {
 
 }
-showtreeop_ids(pick_id) {
-  this.navCtrl.push(TreeopsPage, {picking_id: pick_id});
+showtreeop_ids(pick_id, pick_type) {
+  this.navCtrl.push(TreeopsPage, {'picking_id': pick_id, 'source_model' : pick_type});
 }
 
-doAsign(pick_id){
-  this.change_pick_value(pick_id, 'user_id', this.uid);
+doAsign(pick_id, pick_type){
+  this.change_pick_value(pick_id, 'user_id', this.uid, pick_type);
   /*this.user='assigned';
   this.filter_picks(this.picking_type_id);*/
 }
-doDeAsign(pick_id){
+doDeAsign(pick_id, pick_type){
   
-  this.change_pick_value(pick_id, 'user_id', false);
+  this.change_pick_value(pick_id, 'user_id', false, pick_type);
   /*this.user='no_assigned';
   this.filter_picks(this.picking_type_id);*/
 }
-change_pick_value(id, field, new_value){
+change_pick_value(id, field, new_value, model='stock.picking'){
   var self = this;
-  var model = 'stock.picking'
   var method = 'change_pick_value'
   var values = {'id': id, 'field': field, 'value': new_value}
   var object_id
@@ -233,9 +247,8 @@ change_pick_value(id, field, new_value){
         });
 }
    
-doTransfer(id){
+doTransfer(id, model = 'stock.picking'){
   var self = this;
-  var model = 'stock.picking'
   var method = 'doTransfer'
   var values = {'id': id}
   var object_id = {}

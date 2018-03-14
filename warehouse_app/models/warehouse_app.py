@@ -30,8 +30,9 @@ INFO_FIELDS = {'stock.quant.package': ['id', 'name', 'lot_id', 'location_id','pa
               'stock.production.lot': ['id', 'name', 'product_id', 'use_date', 'removal_date', 'qty_available', 'quant_ids', 'display_name', 'uom_id', 'location_id'],
               'stock.location': ['id', 'name', 'usage', 'barcode', 'need_check'],
               'product.product': ['id', 'display_name', 'name', 'barcode', 'default_code', 'default_stock_location_id', 'tracking', 'uom_id', 'qty_available'],
-              'stock.picking': ['id', 'name', 'picking_type_id', 'user_id', 'min_date', 'state', 'location_id', 'location_dest_id', 'wave_id', 'priority', 'remaining_ops', 'pack_operation_count', 'pack_operation_ids'],
-              'stock.pack.operation': ['id', 'display_name', 'package_id', 'result_package_id', 'pack_lot_ids', 'pda_product_id', 'pda_done', 'is_done', 'product_qty', 'qty_done', 'ordered_qty', 'tracking', 'picking_id', 'location_id', 'location_dest_id'],
+              'stock.picking': ['id', 'name', 'picking_type_id', 'user_id', 'min_date', 'state', 'location_id', 'location_dest_id', 'wave_id', 'remaining_ops', 'pack_operation_count', 'pack_operation_ids'],
+              'stock.picking.wave': ['id', 'name', 'picking_type_id', 'user_id', 'min_date', 'state', 'location_id', 'location_dest_id', 'wave_id', 'remaining_ops', 'pack_operation_count', 'pack_operation_ids'],
+              'stock.pack.operation': ['id', 'display_name', 'package_id', 'result_package_id', 'pack_lot_ids', 'pda_product_id', 'pda_done', 'is_done', 'product_qty', 'qty_done', 'ordered_qty', 'tracking', 'picking_id', 'location_id', 'location_dest_id', 'product_uom_id'],
               'stock.pack.operation.lot': ['id', 'display_name', 'lot_id', 'qty', 'qty_todo']}
 
 INFO_FIELDS_M2O = {'stock.quant.package': ['id', 'name', 'location_id', 'package_qty', 'multi', 'product_id', 'uom_id'],
@@ -40,10 +41,11 @@ INFO_FIELDS_M2O = {'stock.quant.package': ['id', 'name', 'location_id', 'package
                   'stock.quant':['id', 'display_name', 'lot_id', 'location_id', 'qty', 'reservation_id', 'in_date'],
                   'product.uom': ['id', 'name'],
                   'res.users':  ['id', 'name'],
-                  'stock.pack.operation': ['id', 'display_name', 'package_id', 'result_package_id','pack_lot_ids', 'pda_product_id', 'pda_done', 'is_done', 'product_qty', 'qty_done', 'ordered_qty', 'tracking', 'picking_id', 'location_id', 'location_dest_id'],
+                  'stock.pack.operation': ['id', 'display_name', 'package_id', 'result_package_id', 'pack_lot_ids', 'pda_product_id', 'pda_done', 'is_done', 'product_qty', 'qty_done', 'ordered_qty', 'tracking', 'picking_id', 'location_id', 'location_dest_id', 'product_uom_id'],
                   'stock.pack.operation.lot': ['id', 'display_name', 'lot_id', 'qty', 'qty_todo'],
                   'stock.picking.type': ['id', 'name', 'show_in_pda', 'short_name', 'code', 'use_create_lots', 'use_existing_lots', 'show_entire_packs'],
-                  'stock.picking': ['id', 'name', 'picking_type_id', 'user_id', 'min_date', 'state', 'location_id', 'location_dest_id', 'wave_id', 'priority', 'remaining_ops', 'pack_operation_count', 'pack_operation_ids'],
+                  'stock.picking': ['id', 'name', 'picking_type_id', 'user_id', 'min_date', 'state', 'location_id', 'location_dest_id', 'wave_id',  'remaining_ops', 'pack_operation_count', 'pack_operation_ids'],
+                  'stock.picking.wave': ['id', 'name', 'picking_type_id', 'user_id', 'min_date', 'state', 'location_id', 'location_dest_id', 'remaining_ops', 'pack_operation_count', 'pack_operation_ids'],
                   'product.product': ['id', 'display_name', 'barcode', 'name', 'default_code', 'default_stock_location_id', 'tracking', 'uom_id']}
 
 
@@ -62,7 +64,11 @@ class WarehouseApp (models.Model):
         return fields
 
     def get_selection(self, object_id, field):
+        print "SELECTION "
+        print object_id
+        print field
         value = [t for t in object_id.fields_get(field)[field]['selection'] if t[0].startswith(object_id[field])]
+        print value
         return value and {'value': value[0][0], 'name': value[0][1]} or ''
 
     @api.model

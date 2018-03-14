@@ -19,8 +19,8 @@ export class HomePage {
   loginData = {password: '', username: ''};
   CONEXION = {
 
-      url: 'http://192.168.0.10',
-      port: '80',
+      url: 'http://192.168.0.112',
+      port: '8069',
       db: 'lasrias_app',
       username: 'kiko',
       password: 'kiko',

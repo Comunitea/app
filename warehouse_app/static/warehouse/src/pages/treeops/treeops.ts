@@ -42,8 +42,9 @@ export class TreeopsPage {
   pick_id = 0
   limit = 25
   offset = 0
-  order = 'picking_order, product_id asc'
+  order = 'picking_order, pda_product_id asc'
   model = 'stock.pack.operation'
+  source_model = 'stock.picking'
   domain = []
   pick_domain = []
   record_count = 0
@@ -60,6 +61,7 @@ export class TreeopsPage {
     this.aux = new AuxProvider
     this.pick = {};
     this.pick_id = this.navParams.data.picking_id;
+    this.source_model = this.navParams.data.source_model;
     this.record_count = 0;    
     this.scan = '';
     this.storage.get('WhatOps').then((val) => {
@@ -103,7 +105,7 @@ export class TreeopsPage {
     if (id==0){
       id = this.pick_id
     }
-    var values = {'id': id, 'model': 'stock.picking'}
+    var values = {'id': id, 'model': this.source_model}
 
     self.storage.get('CONEXION').then((val) => {
       if (val == null) {
@@ -117,9 +119,7 @@ export class TreeopsPage {
             function (uid) {
               odoo.call(model, method, values).then(
                 function (res) {
-                  //AQUI DECIDO QUE HACER EN FUNCION DE LO QUE RECIBO
-                  //Estoy scaneando ORIGEN
-                  
+              
                   if (res['id']!=0){
                     
                     self.pick = res['values']
@@ -171,11 +171,11 @@ export class TreeopsPage {
   }
 
   openOp(op_id, op_id_index){
-    this.navCtrl.push(SlideopPage, {op_id: op_id, index: op_id_index, ops: this.pick['pack_operation_ids']})
+    this.navCtrl.push(SlideopPage, {op_id: op_id, index: op_id_index, ops: this.pick['pack_operation_ids'], pick_id: this.pick_id, source_model:this.source_model})
   }
 
   submitScan (){
-    this.getObjectId({'model': ['stock.location', 'stock.quant.package', 'stock.production.lot'], 'search_str' : this.treeForm.value['scan']})
+    this.getObjectId({'model': ['stock.location', 'stock.quant.package', 'stock.production.lot', 'product.product'], 'search_str' : this.treeForm.value['scan']})
     this.treeForm.reset();
   }
 
@@ -246,7 +246,7 @@ export class TreeopsPage {
       
   doTransfer(id){
     var self = this;
-    var model = 'stock.picking'
+    var model = this.source_model
     var method = 'doTransfer'
     var values = {'id': id}
     var object_id = {}

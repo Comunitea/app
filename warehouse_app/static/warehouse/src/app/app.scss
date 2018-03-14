@@ -139,15 +139,11 @@ ion-toast.toastOk {
     background-color:color($colors, odoo); 
     color: color($colors, odoolight);
 }
-ion-badge {
-    width: 33%;
-}
+
 ion-button .button-inner {
     font-size: small;
 }
-.ioninfo {
-    width: 33%;
-}
+
 .ioninfo .ion-info-inner{
     margin: 0px;
     padding: 0px;
@@ -182,7 +178,8 @@ ion-button .button-inner {
     margin: 2px
 }
 .w75{
-    width: 75%
+    width: 75%;
+    margin: 2px;
 }
 .w50{
     width: 50%;
@@ -201,7 +198,7 @@ ion-button .button-inner {
     color: color($colors, light);
 }
 .buttonOp{
-    width: 75%;
+    
     /*font-weight: bold;*/
     color: color($colors, product);
     border: none; 
@@ -210,7 +207,7 @@ ion-button .button-inner {
     color: color($colors, light);
 }
 .buttonOp_ok{
-    width: 75%;
+    
     /*font-weight: bold;*/
     color: color($colors, product);
     border: none; 
@@ -230,4 +227,7 @@ ion-button .button-inner {
 }
 .badge_0 {
     background-color: color($colors, odooprimary)
+}
+.back_light .item-group-inner {
+    background-color: color($colors, odoolight)!important;
 }

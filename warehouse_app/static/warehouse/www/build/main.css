@@ -60647,16 +60647,8 @@ input:focus {
   color: #f0e5ed;
 }
 
-ion-badge {
-  width: 33%;
-}
-
 ion-button .button-inner {
   font-size: small;
-}
-
-.ioninfo {
-  width: 33%;
 }
 
 .ioninfo .ion-info-inner {
@@ -60698,6 +60690,7 @@ ion-button .button-inner {
 
 .w75 {
   width: 75%;
+  margin: 2px;
 }
 
 .w50 {
@@ -60724,7 +60717,6 @@ ion-button .button-inner {
 }
 
 .buttonOp {
-  width: 75%;
   /*font-weight: bold;*/
   color: #875a7b;
   border: none;
@@ -60734,7 +60726,6 @@ ion-button .button-inner {
 }
 
 .buttonOp_ok {
-  width: 75%;
   /*font-weight: bold;*/
   color: #875a7b;
   border: none;
@@ -60764,4 +60755,8 @@ ion-button .button-inner {
 
 .badge_0 {
   background-color: #21b799;
+}
+
+.back_light .item-group-inner {
+  background-color: #f0e5ed !important;
 }

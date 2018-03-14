@@ -25,6 +25,7 @@ import { ProductPage} from '../pages/product/product'
 import { LotPage} from '../pages/lot/lot'
 import { PackagePage} from '../pages/package/package'
 import { LocationPage} from '../pages/location/location'
+import { SerialnumberPage } from '../pages/serialnumber/serialnumber'
 
 import { NativeAudio } from '@ionic-native/native-audio';
 import { AppSoundProvider } from '../providers/app-sound/app-sound';
@@ -41,7 +42,8 @@ import { AppSoundProvider } from '../providers/app-sound/app-sound';
     LotPage,
     LocationPage,
     PackagePage,
-    ProductPage
+    ProductPage,
+    SerialnumberPage
   ],
   imports: [
     BrowserModule,
@@ -62,7 +64,8 @@ import { AppSoundProvider } from '../providers/app-sound/app-sound';
     LotPage,
     LocationPage,
     PackagePage,
-    ProductPage
+    ProductPage,
+    SerialnumberPage
   ],
   providers: [
     StatusBar,
