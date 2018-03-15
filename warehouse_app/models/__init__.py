@@ -11,3 +11,4 @@ import product_product
 import stock_quant_package
 import stock_picking_wave
 import warehouse_app
+import ir_actions_report_xml
