@@ -26,6 +26,17 @@ class ProductProduct(models.Model):
         if newer_quant:
             return newer_quant.location_id
 
+    @api.multi
+    def print_product_tag_report(self):
+        self.ensure_one()
+        custom_data = {
+            'product_id': self.id,
+        }
+        rep_name = 'warehouse_app.product_tag_report'
+        rep_action = self.env["report"].get_action(self, rep_name)
+        rep_action['data'] = custom_data
+        return rep_action
+
 
 class ProductTemplate(models.Model):
 

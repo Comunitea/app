@@ -13,6 +13,7 @@
     "installable": True,
     "depends": [
         "stock",
+        "stock_picking_wave"
     ],
     "data": [
         'security/ir.model.access.csv',
@@ -23,5 +24,10 @@
         'views/stock_location_rack.xml',
         'views/stock_move.xml',
         'views/printing_printer.xml'
+        'views/product_product.xml',
+        "report/report.xml",
+        "report/product_tag_report.xml",
+        "report/location_tag_report.xml",
+
     ],
 }
