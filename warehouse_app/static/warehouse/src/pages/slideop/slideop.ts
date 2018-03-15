@@ -59,9 +59,10 @@ export class SlideopPage {
   location_id_change: number = 0;
   lot_id_change: number = 0;
   qty_change: boolean = false
-  
+  dirty: boolean=false
   ops = []
   index:number = 0
+  last_index:number = 0
   message = ''
   state: number = 0/* 0 espera origen, 1 cantidad yo destino 2 destino*/
   input: number = 0
@@ -75,6 +76,7 @@ export class SlideopPage {
   orig_model = ''
   pick_id
   filter
+
   constructor(public navCtrl: NavController, public modalCtrl: ModalController, public toastCtrl: ToastController, public navParams: NavParams, private formBuilder: FormBuilder, public alertCtrl: AlertController, private storage: Storage) {
     
     this.op_id = this.navParams.data.op_id;
@@ -82,6 +84,7 @@ export class SlideopPage {
     this.filter = this.navParams.data.filter || 'Todas';
     this.pick_id = this.navParams.data.pick_id;
     this.index = Number(this.navParams.data.index || 0);
+    this.last_index = this.index
 
     if (this.filter=='Pendientes'){
       this.ops = this.navParams.data.ops.filter(id => !id['pda_done'] )
@@ -103,6 +106,7 @@ export class SlideopPage {
     this.index = Number(this.navParams.data.index || 0);
     this.barcodeForm = this.formBuilder.group({scan: ['']});
     this.resetValues()
+    this.dirty=false
     this.loadOpObj(this.op_id)
     this.check_new_state()
     }
@@ -444,24 +448,32 @@ submit (values){
   }
 
   check_index(inc){
-    if (this.ops.length==0){
-      return false
-    }
+
     this.index += inc
-    if (this.index > this.ops.length){
+    if (this.index > this.ops.length-1){
       this.index=0
     }
-    if (this.index <0){
+    if (this.index < 0){
       this.index = this.ops.length
     }
   }
 
   load_next_op(){
-    if (this.ops.length==0){
-      this.navCtrl.push(TreeopsPage, {pick_id:this.pick_id, source_model:this.source_model, filter: this.filter} )
+    let inc = 1
+    do {
+        inc +=1
+        this.check_index(1);
+      }
+      while (this.ops[this.index]['pda_done'] && inc <= this.ops.length)
+
+    if (this.ops.length<inc){
+      this.navCtrl.push(TreeopsPage, {picking_id:this.pick_id, source_model:this.source_model, filter: 'Todas'} )
     }
-    this.op_id = this.ops[this.index]['id']
-    this.loadOpObj(this.op_id)
+    else {
+      
+      this.op_id = this.ops[this.index]['id']
+      this.loadOpObj(this.op_id)
+    }
   }
   
   doOp(id){
@@ -487,13 +499,9 @@ submit (values){
               odoo.call(model, method, values).then(
                 function (value) {
                   self.op['pda_done'] = true
-                  if (self.filter=='Pendientes'){
-                    self.ops.splice(self.index, 1)
-                  }
+                  self.ops[self.index]['pda_done'] = true
+                  self.last_index = self.index
                   self.load_next_op()
-                  
-                  
-
                 },
                 function () {
                   self.cargar = false;
@@ -527,7 +535,7 @@ submit (values){
 
     
   inputQty() {
-    if (this.op['tracking']!='none'){return}
+    if (this.op['tracking']['value']!='none'){return}
     if (this.check_changes()){return}
     var self = this;
     if (self.waiting < 1 && self.waiting > 4) {return}
@@ -559,7 +567,9 @@ submit (values){
               self.presentAlert('Error!', 'La cantidad debe ser mayor que 0');
             }
             else if (data.qty) {
-              //self.op['qty_done'] = data.qty
+              self.op['qty_done'] = data.qty
+              if (self.op['qty_done']!=data.qty){self.change_op_value(this.op_id, 'qty_done', data.qty)}
+              self.ops[self.index]['qty_done']= data.qty
               self.op_selected['qty_done']= data.qty
               self.check_new_state();
             }
@@ -620,7 +630,7 @@ submit (values){
     myModal.onDidDismiss(data => 
       {
         if (data) {
-          this['op_selected']['qty_done'] = data.qty_done;
+          this.op_selected['qty_done'] = data.qty_done;
           this['op']['pack_lot_ids'] = data.pack_lot_ids
         }
         //this.presentAlert('Modal', data && data.message)
@@ -629,6 +639,7 @@ submit (values){
 
     
   loadOpObj(id = 0){
+    this.resetValues()
     this.last_id = this.op_id
     this.last_qty = this.op_selected['qty_done']
     var self = this
@@ -656,6 +667,10 @@ submit (values){
                   self.waiting = 0;
                   self.op = res['values']
                   self.check_loaded_values()
+                  if (self.op['tracking']['value']!='serial'){
+                    self.op_selected['qty_done'] = self.op['product_qty']
+                  }
+
                   return true;
                 }
               },
@@ -693,10 +708,17 @@ submit (values){
 
   check_new_state(){
     if (this.op['pda_done']){
-      this.waiting = -1;
-      this.state = 0;
+      this.state=2;
+      this.waiting=3;
       return
     }
+    if (this.op && this.op['tracking']){
+      if (this.op['tracking']['value']=='none' && !this.dirty){
+        this.op_selected['qty_done']= this.op['product_qty']
+        this.dirty=true
+      }
+    }
+  
     let waiting = this.waiting
     let ops = this.op_selected
     if (waiting <= 5) {
@@ -747,6 +769,7 @@ submit (values){
   find_in_op(val){
     let model
     let id
+   
     if (this.state == 0)    {
       if ((this.op['package_id'] && val == this.op['package_id']['name'])) {
         id = this.op['package_id']['id']
@@ -885,3 +908,4 @@ submit (values){
   } 
 
 }
+

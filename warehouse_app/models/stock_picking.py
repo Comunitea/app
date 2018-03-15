@@ -112,7 +112,7 @@ class StockPicking(models.Model):
     def send_pick_to_pda(self):
         for pick in self: 
             if pick.state in ('assigned', 'partially_available'):
-                pick.picking_ids.set_picking_order()
+                pick.set_picking_order()
             else:
                 raise ValidationError (_("Pick state not valid"))
 
@@ -156,13 +156,14 @@ class StockPicking(models.Model):
     
     @api.model
     def change_pick_value(self, vals):
+        
         print  "------------------- Cambiar valores en las albaranes ----------------\n%s"%vals
         field = vals.get('field', False)
         value = vals.get('value', False)
         id = vals.get('id', False)
         pick = self.browse(id)
 
-        if field == 'user_id' and (not pick.user_id or pick.user_id.id == self._uid) and pick.wave_id == False:
+        if field == 'user_id' and not pick.user_id and not pick.wave_id:
             pick.write({'user_id': value})
         else:
             return False

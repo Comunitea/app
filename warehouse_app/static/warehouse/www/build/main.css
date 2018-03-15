@@ -60631,7 +60631,7 @@ input:focus {
   color: #E46F78;
 }
 
-.pickdone {
+.pickdone .header-inner {
   color: #21b799;
 }
 

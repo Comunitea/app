@@ -202,12 +202,12 @@ class StockPackOperation (models.Model):
 
     @api.model
     def doOp(self, vals):
-
+        ##import ipdb; ipdb.set_trace()
         print"####--- Do op  ---###\n%s\n###############################################" % vals
         id = vals.get('id', False)
         do_id = vals.get('do_id', True)
         op = self.browse([id])
-        qty = vals.get('qty', op.qty_done or op.product_qty or 0.00)
+        qty = vals.get('qty_done', op.qty_done or op.product_qty or 0.00)
 
 
         if not op:
@@ -218,9 +218,10 @@ class StockPackOperation (models.Model):
             qty_done = 0.0
 
         #next_id = op.return_next_op(do_id)
-        op.write({'pda_done': do_id,
-                  'qty_done': qty_done})
+        opvals = {'pda_done': do_id,
+                  'qty_done': qty_done}
 
+        op.write(opvals)
         if do_id and False:
             print "Next op:%s" % next_id
             quants = op.return_quants_to_select(id, op.product_qty - qty_done)
@@ -310,7 +311,8 @@ class StockPackOperation (models.Model):
         self.pda_done = not self.pda_done
         if self.pda_done and not self.result_package_id and self.location_dest_id.in_pack:
             self.put_in_pack()
-
+        if not self.pda_done:
+            self.qty_done = 0.00
 
     @api.model
     def change_op_value(self, vals):

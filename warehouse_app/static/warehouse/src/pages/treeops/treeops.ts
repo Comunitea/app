@@ -244,14 +244,23 @@ export class TreeopsPage {
       
         }
 
+  check_transfer(){
+    var res = true
+    for (var op in this.pick['pack_operation_ids']){
+      res = res && this.pick['pack_operation_ids'][op]['tracking']['value'] == 'none'
+      if (!res){return}
+    }
+    
+  }
       
   doTransfer(id){
+    if (!this.check_transfer){this.presentAlert('Aviso', 'Este trabajo no puede ser validado desde aquí'); return}
     var self = this;
     var model = this.source_model
     var method = 'doTransfer'
     var values = {'id': id}
     var object_id = {}
-
+    
     
     this.storage.get('CONEXION').then((val) => {
       if (val == null) {

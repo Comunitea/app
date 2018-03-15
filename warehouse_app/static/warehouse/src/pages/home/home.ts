@@ -19,11 +19,11 @@ export class HomePage {
   loginData = {password: '', username: ''};
   CONEXION = {
 
-      url: 'http://192.168.0.112',
-      port: '8069',
+      url: 'http://lasrias.livingodoo.com',
+      port: '80',
       db: 'lasrias_app',
-      username: 'kiko',
-      password: 'kiko',
+      username: 'admin',
+      password: 'admin',
 
   };
   /*CONEXION = {

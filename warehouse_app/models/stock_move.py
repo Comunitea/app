@@ -109,9 +109,9 @@ class StockMove(models.Model):
             create_new_result = True
 
         if not result_package_id:
-            loc_dest = self.env['stock.location'].search_read([('id', '=', location_dest_id)], 'in_pack', limit=1)
+            loc_dest = self.env['stock.location'].search_read([('id', '=', location_dest_id)], ['in_pack'], limit=1)
             if loc_dest:
-                need_check = loc_dest['in_pack']
+                need_check = loc_dest[0]['in_pack']
                 if need_check:
                     create_new_result = True
 
@@ -134,8 +134,9 @@ class StockMove(models.Model):
 
 
         if create_new_result:
-            result_package_id = self.env['stock.quant.package'].create({}).id
+            result_package_id = self.env['stock.quant.package'].create({})
             message = "Se ha creado un nuevo paquete %s"%result_package_id.name
+            result_package_id = result_package_id.id
 
         vals = {
             'origin': 'PDA done: [%s]'%self.env.user.name,

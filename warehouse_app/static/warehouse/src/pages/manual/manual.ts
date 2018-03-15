@@ -232,7 +232,7 @@ export class ManualPage {
       this['move']['restrict_lot_id'] = values['lot_id'];
       this['move']['product_id'] = values['product_id'];
       this['move']['uom_id'] = values['uom'];
-      this.tracking = values['product_id']['tracking']
+      this.tracking = values['product_id']['tracking']['value']
       }
     //DESTINO  
     else if (this.state==1) {
@@ -275,7 +275,7 @@ export class ManualPage {
     let obj = {'id': values['id'], 'name': values['display_name'], 'product_id': values['product_id'], 'location_id': values['location_id'], 'qty_available': values['qty_available']}
     console.log (values)
     
-    if (values['product_id']['tracking'] =='serial'){
+    if (values['product_id']['tracking']['value'] =='serial'){
       location_id = this['move']['location_id']
       this.reset_form();
     }
@@ -290,7 +290,7 @@ export class ManualPage {
     this['move']['product_qty'] = values['qty_available'];
     this['move']['product_id'] = values['product_id'];
     this['move']['uom_id'] = values['uom_id'];
-    this.tracking = values['product_id']['tracking'];
+    this.tracking = values['product_id']['tracking']['value'];
   }
 
   set_location(values){
@@ -325,7 +325,7 @@ export class ManualPage {
     let obj = {'id': values['id'], 'name': values['display_name'], 'tracking': values['tracking'], 'qty_available': values['qty_available'] }
 
     if (this.state==0){
-      if (Boolean(this['move']['restrict_package_id'])  && this['move']['restrict_package_id']['product_id'] && this['move']['restrict_package_id']['product_id']['id'] != obj['id']) {
+      if (Boolean(this['move']['restrict_package_id']) && this['move']['restrict_package_id']['product_id'] && this['move']['restrict_package_id']['product_id']['id'] != obj['id']) {
         this.presentAlert ('Error de producto', 'El paquete seleccionado tiene producto');
         return
       }
@@ -334,7 +334,7 @@ export class ManualPage {
         return
       }
       this['move']['product_id'] = obj;
-      this.tracking = obj['tracking']
+      this.tracking = obj['tracking']['value']
      }
   }  
 

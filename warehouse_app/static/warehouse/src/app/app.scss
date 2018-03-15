@@ -127,7 +127,10 @@ ion-toast.toastOk {
 .pdaChecked {color: color($colors, odootext);}
 
 .pickwaiting {color: color($colors, sales);}
-.pickdone {color: color($colors, odooprimary);}
+
+.pickdone .header-inner{
+    color: color($colors, odooprimary);
+}
 
 .ok{
     font-weight: bold;

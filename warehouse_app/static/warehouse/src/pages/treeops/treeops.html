@@ -37,7 +37,7 @@
         <ion-label></ion-label>
         <ion-badge item-start color="primary">{{pick.state && pick.state.name}} </ion-badge>
         <ion-badge item-end color='odoo' (click)="seeAll()">{{whatOps}}</ion-badge>
-        <ion-badge item-end (click)="doTransfer(pick.id)" [hidden]='pick.state == "done" || pick.done_ops == 0' color='odoo'>Validar</ion-badge>
+        <ion-badge item-end (click)="doTransfer(pick.id)" [hidden]='pick.state == "done"' color='odoo'>Validar</ion-badge>
         <ion-badge item-end (click)="doAssign(pick.id)" [hidden]='!pick.user_id' color='odoo'>Asignarme</ion-badge>
         
       </ion-item>
@@ -61,7 +61,7 @@
           <button ion-button item-end (click)="openOp(item.id, item_index)" class='buttonProduct w100'> {{item.pda_product_id && item.pda_product_id.name || ''}}</button>
         </ion-item>
         <ion-item class="all0">
-          <ion-label>I:{{item_index}}</ion-label>
+          <ion-label></ion-label>
           <ion-badge item-end class="ion-info w33" [hidden] = "!item.package_id && !item.lot_id">
               {{item.package_id && item['package_id']['name'] || item.lot_id && item['lot_id'][1]}}
           </ion-badge>
