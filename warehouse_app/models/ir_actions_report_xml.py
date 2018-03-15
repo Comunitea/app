@@ -30,7 +30,7 @@ class IrActionsReportXml(models.Model):
     def behaviour(self):
         
         results = super(IrActionsReportXml, self).behaviour()
-        import ipdb; ipdb.set_trace()
+        
         force_printer = self._context.get('force_printer', False)
         printer_id = self._context.get('printer_id', False)
         printer = self.env('printers').browse(printer_id)

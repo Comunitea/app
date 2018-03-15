@@ -13,7 +13,8 @@
     "installable": True,
     "depends": [
         "stock",
-        "stock_picking_wave"
+        "stock_picking_wave",
+        "base_report_to_printer"
     ],
     "data": [
         'security/ir.model.access.csv',

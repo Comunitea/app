@@ -208,14 +208,15 @@ class WarehouseApp (models.Model):
         return res
 
 
-
+    @api.model
     def print_tag(self, values):
-        print "Recibo %s"%values
-        printer_barcode = vals.get('printer_barcode', False)
         
+        print "Recibo %s"%values
+        printer_barcode = values.get('printer_barcode', False)
+        printer = False
         if printer_barcode:
             ctx = self._context.copy()
-            printer = self.env['printers'].search(['barcode', '=', vals.get('printer_barcode')], limit=1)
+            printer = self.env['printing.printer'].search([('barcode', '=', values.get('printer_barcode'))], limit=1)
 
         
         if printer:

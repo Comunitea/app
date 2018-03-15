@@ -7,7 +7,7 @@ webpackJsonp([10],{
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SlideopPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__home_home__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__treeops_treeops__ = __webpack_require__(59);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__treepick_treepick__ = __webpack_require__(35);
@@ -1080,7 +1080,7 @@ var SerialnumberPage = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ManualPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__home_home__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(17);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1532,7 +1532,7 @@ var ManualPage = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ShowinfoPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__home_home__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lot_lot__ = __webpack_require__(47);
@@ -1649,17 +1649,16 @@ var ShowinfoPage = (function () {
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["y" /* HostListener */])('document:keydown', ['$event']),
         __metadata("design:type", Function),
-        __metadata("design:paramtypes", [Object]),
+        __metadata("design:paramtypes", [KeyboardEvent]),
         __metadata("design:returntype", void 0)
     ], ShowinfoPage.prototype, "handleKeyboardEvent", null);
     ShowinfoPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
             selector: 'page-showinfo',template:/*ion-inline-start:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/showinfo/showinfo.html"*/'<!--\n  Generated template for the ShowinfoPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n    <ion-navbar color="primary">\n\n          <button ion-button icon-only menuToggle>\n            <ion-icon name="menu"></ion-icon>\n          </button>\n\n        <ion-title>Scan etiqueta</ion-title>\n        <ion-buttons end>\n          <button ion-button (click)=\'logOut()\'>\n            <ion-icon name="log-out"></ion-icon>\n          </button>\n      </ion-buttons>\n    </ion-navbar>\n\n\n\n  </ion-header>\n\n\n\n<ion-content padding>\n  <ion-list>\n    <ion-item>\n      \n    </ion-item>\n  </ion-list>\n</ion-content>\n\n\n<ion-footer>\n    <form [formGroup]="barcodeForm" class ="alignBottom">\n     <ion-item  >\n        <ion-label color="odoo" item-start>Scan: </ion-label>\n        <ion-input #scan [formControl]="barcodeForm.controls[\'scan\']" type="text" name="scan" placeholder = "Scan"  autofocus></ion-input>\n\n        <button ion-button icon-only item-end clear (click)="submitScan()">\n          <ion-icon name="barcode"></ion-icon>\n        </button>\n      </ion-item>\n    </form>\n  </ion-footer>\n'/*ion-inline-end:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/showinfo/showinfo.html"*/,
         }),
-        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]) === "function" && _f || Object])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */], __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */], __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]])
     ], ShowinfoPage);
     return ShowinfoPage;
-    var _a, _b, _c, _d, _e, _f;
 }());
 
 //# sourceMappingURL=showinfo.js.map
@@ -2897,7 +2896,7 @@ var PackagePage = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ProductPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__home_home__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lot_lot__ = __webpack_require__(47);
@@ -2950,14 +2949,16 @@ var ProductPage = (function () {
         console.log('ionViewDidLoad ProductPage');
     };
     ProductPage.prototype.submitScan = function () {
+        var scaned = this.barcodeForm.value['scan'];
+        this.print(this.model, this.item.id, scaned);
         this.barcodeForm.reset();
-        this.print(this.model, this.item.id, this.barcodeForm.value['scan']);
     };
     ProductPage.prototype.print = function (model, id, printer_barcode) {
         var self = this;
         var values = { 'id': id, 'model': model, 'printer_barcode': printer_barcode };
+        var model_src = 'warehouse.app';
         var method = 'print_tag';
-        var confirm = false;
+        var context = {};
         self.storage.get('CONEXION').then(function (val) {
             if (val == null) {
                 console.log('No hay conexión');
@@ -2968,7 +2969,7 @@ var ProductPage = (function () {
                 var con = val;
                 var odoo = new OdooApi(con.url, con.db);
                 odoo.login(con.username, con.password).then(function (uid) {
-                    odoo.call(model, method, values).then(function (value) {
+                    odoo.call(model_src, method, values, context).then(function (value) {
                         if (value) {
                             //AQUI DECIDO QUE HACER EN FUNCION DE LO QUE RECIBO
                             self.presentToast('Se ha impreso la etiqueta: ' + self.item['barcode'] || self.item['name']);
@@ -3095,7 +3096,7 @@ var ProductPage = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return TreeopsPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__providers_aux_aux__ = __webpack_require__(46);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__home_home__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__slideop_slideop__ = __webpack_require__(110);

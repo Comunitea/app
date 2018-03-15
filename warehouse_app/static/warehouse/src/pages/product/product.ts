@@ -61,18 +61,19 @@ export class ProductPage {
 
 
   submitScan(){
-
+    let scaned = this.barcodeForm.value['scan']
+    this.print(this.model, this.item.id, scaned);
     this.barcodeForm.reset();
-    this.print(this.model, this.item.id, this.barcodeForm.value['scan']);
     }
 
 
   print (model, id, printer_barcode){
-    
+
     var self = this
     var values = {'id': id, 'model': model, 'printer_barcode': printer_barcode}
+    var model_src = 'warehouse.app'
     var method = 'print_tag'
-    var confirm = false
+    var context = {}
     self.storage.get('CONEXION').then((val) => {
       if (val == null) {
         console.log('No hay conexión');
@@ -83,7 +84,7 @@ export class ProductPage {
           var odoo = new OdooApi(con.url, con.db);
           odoo.login(con.username, con.password).then(
             function (uid) {
-              odoo.call(model, method, values).then(
+              odoo.call(model_src, method, values,context).then(
                 function (value) {
                   if (value){
                   //AQUI DECIDO QUE HACER EN FUNCION DE LO QUE RECIBO
