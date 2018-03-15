@@ -24,7 +24,7 @@
 
                 <div name="button_box" position="before">
                     <header position="inside">
-                    <button name="print_location_tag_report"
+                    <button name="print_barcode_tag_report"
                             type="object" string="Print Tag"/>
                     </header>
                 </div>

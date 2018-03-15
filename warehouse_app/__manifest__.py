@@ -23,7 +23,7 @@
         'views/stock_quant_package.xml',
         'views/stock_location_rack.xml',
         'views/stock_move.xml',
-        'views/printing_printer.xml'
+        'views/printing_printer.xml',
         'views/product_product.xml',
         "report/report.xml",
         "report/product_tag_report.xml",

@@ -101,7 +101,7 @@ class StockLocation (models.Model):
         return location and location.id or False
 
     @api.multi
-    def print_location_tag_report(self):
+    def print_barcode_tag_report(self):
         self.ensure_one()
         custom_data = {
             'location_id': self.id,

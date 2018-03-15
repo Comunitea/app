@@ -1649,16 +1649,17 @@ var ShowinfoPage = (function () {
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["y" /* HostListener */])('document:keydown', ['$event']),
         __metadata("design:type", Function),
-        __metadata("design:paramtypes", [KeyboardEvent]),
+        __metadata("design:paramtypes", [Object]),
         __metadata("design:returntype", void 0)
     ], ShowinfoPage.prototype, "handleKeyboardEvent", null);
     ShowinfoPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
             selector: 'page-showinfo',template:/*ion-inline-start:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/showinfo/showinfo.html"*/'<!--\n  Generated template for the ShowinfoPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n    <ion-navbar color="primary">\n\n          <button ion-button icon-only menuToggle>\n            <ion-icon name="menu"></ion-icon>\n          </button>\n\n        <ion-title>Scan etiqueta</ion-title>\n        <ion-buttons end>\n          <button ion-button (click)=\'logOut()\'>\n            <ion-icon name="log-out"></ion-icon>\n          </button>\n      </ion-buttons>\n    </ion-navbar>\n\n\n\n  </ion-header>\n\n\n\n<ion-content padding>\n  <ion-list>\n    <ion-item>\n      \n    </ion-item>\n  </ion-list>\n</ion-content>\n\n\n<ion-footer>\n    <form [formGroup]="barcodeForm" class ="alignBottom">\n     <ion-item  >\n        <ion-label color="odoo" item-start>Scan: </ion-label>\n        <ion-input #scan [formControl]="barcodeForm.controls[\'scan\']" type="text" name="scan" placeholder = "Scan"  autofocus></ion-input>\n\n        <button ion-button icon-only item-end clear (click)="submitScan()">\n          <ion-icon name="barcode"></ion-icon>\n        </button>\n      </ion-item>\n    </form>\n  </ion-footer>\n'/*ion-inline-end:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/showinfo/showinfo.html"*/,
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */], __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */], __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]])
+        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]) === "function" && _f || Object])
     ], ShowinfoPage);
     return ShowinfoPage;
+    var _a, _b, _c, _d, _e, _f;
 }());
 
 //# sourceMappingURL=showinfo.js.map
@@ -2896,11 +2897,12 @@ var PackagePage = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ProductPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_storage__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__home_home__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lot_lot__ = __webpack_require__(47);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__location_location__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__package_package__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__home_home__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lot_lot__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__location_location__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__package_package__ = __webpack_require__(48);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -2912,10 +2914,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 
 
-//import { ViewChild } from '@angular/core';
-//import { FormBuilder, FormGroup } from '@angular/forms';
 
-//import { HostListener } from '@angular/core';
+
+
+
 
 //*Pagians
 
@@ -2923,21 +2925,68 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 var ProductPage = (function () {
-    function ProductPage(navCtrl, toastCtrl, storage, navParams, alertCtrl) {
+    function ProductPage(navCtrl, toastCtrl, storage, navParams, alertCtrl, formBuilder) {
         this.navCtrl = navCtrl;
         this.toastCtrl = toastCtrl;
         this.storage = storage;
         this.navParams = navParams;
         this.alertCtrl = alertCtrl;
+        this.formBuilder = formBuilder;
         this.model = this.navParams.data.model;
         this.id = this.navParams.data.id;
         this.item = [];
         this.cargar = false;
+        this.barcodeForm = this.formBuilder.group({ scan: [''] });
         this.loaditem();
     }
     ProductPage_1 = ProductPage;
+    ProductPage.prototype.handleKeyboardEvent = function (event) {
+        if (!this.myScan._isFocus) {
+            this.myScan.setFocus();
+        }
+        ;
+    };
     ProductPage.prototype.ionViewDidLoad = function () {
         console.log('ionViewDidLoad ProductPage');
+    };
+    ProductPage.prototype.submitScan = function () {
+        this.barcodeForm.reset();
+        this.print(this.model, this.item.id, this.barcodeForm.value['scan']);
+    };
+    ProductPage.prototype.print = function (model, id, printer_barcode) {
+        var self = this;
+        var values = { 'id': id, 'model': model, 'printer_barcode': printer_barcode };
+        var method = 'print_tag';
+        var confirm = false;
+        self.storage.get('CONEXION').then(function (val) {
+            if (val == null) {
+                console.log('No hay conexión');
+                self.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_4__home_home__["a" /* HomePage */], { borrar: true, login: null });
+            }
+            else {
+                console.log('Hay conexión');
+                var con = val;
+                var odoo = new OdooApi(con.url, con.db);
+                odoo.login(con.username, con.password).then(function (uid) {
+                    odoo.call(model, method, values).then(function (value) {
+                        if (value) {
+                            //AQUI DECIDO QUE HACER EN FUNCION DE LO QUE RECIBO
+                            self.presentToast('Se ha impreso la etiqueta: ' + self.item['barcode'] || self.item['name']);
+                        }
+                        else {
+                            self.presentToast('Ha ocurrido un error al imprimir');
+                        }
+                    }, function () {
+                        self.cargar = false;
+                        self.presentAlert('Falla!', 'Imposible conectarse');
+                    });
+                }, function () {
+                    self.cargar = false;
+                    self.presentAlert('Falla!', 'Imposible conectarse');
+                });
+                self.cargar = false;
+            }
+        });
     };
     ProductPage.prototype.loaditem = function () {
         var self = this;
@@ -2947,7 +2996,7 @@ var ProductPage = (function () {
         self.storage.get('CONEXION').then(function (val) {
             if (val == null) {
                 console.log('No hay conexión');
-                self.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_3__home_home__["a" /* HomePage */], { borrar: true, login: null });
+                self.navCtrl.setRoot(__WEBPACK_IMPORTED_MODULE_4__home_home__["a" /* HomePage */], { borrar: true, login: null });
             }
             else {
                 console.log('Hay conexión');
@@ -2980,13 +3029,13 @@ var ProductPage = (function () {
         var page;
         switch (model) {
             case 'stock.production.lot':
-                page = __WEBPACK_IMPORTED_MODULE_4__lot_lot__["a" /* LotPage */];
+                page = __WEBPACK_IMPORTED_MODULE_5__lot_lot__["a" /* LotPage */];
                 break;
             case 'stock.location':
-                page = __WEBPACK_IMPORTED_MODULE_5__location_location__["a" /* LocationPage */];
+                page = __WEBPACK_IMPORTED_MODULE_6__location_location__["a" /* LocationPage */];
                 break;
             case 'stock.quant.package':
-                page = __WEBPACK_IMPORTED_MODULE_6__package_package__["a" /* PackagePage */];
+                page = __WEBPACK_IMPORTED_MODULE_7__package_package__["a" /* PackagePage */];
                 break;
             case 'product.product':
                 page = ProductPage_1;
@@ -2996,14 +3045,43 @@ var ProductPage = (function () {
             this.navCtrl.push(page, { model: model, id: id });
         }
     };
+    ProductPage.prototype.presentToast = function (message, showClose) {
+        if (showClose === void 0) { showClose = false; }
+        var self = this;
+        var duration = 3000;
+        var toastClass = 'toastOk';
+        if (showClose) {
+            var toastClass_1 = 'toastNo';
+        }
+        ;
+        var toast = this.toastCtrl.create({
+            message: message,
+            duration: duration,
+            position: 'top',
+            showCloseButton: showClose,
+            closeButtonText: 'Ok',
+            cssClass: toastClass
+        });
+        toast.present();
+    };
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_8" /* ViewChild */])('scan'),
+        __metadata("design:type", Object)
+    ], ProductPage.prototype, "myScan", void 0);
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["y" /* HostListener */])('document:keydown', ['$event']),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object]),
+        __metadata("design:returntype", void 0)
+    ], ProductPage.prototype, "handleKeyboardEvent", null);
     ProductPage = ProductPage_1 = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'page-product',template:/*ion-inline-start:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/product/product.html"*/'<!--\n  Generated template for the ProductPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>{{item && item.display_name || "Cargando ..."}}</ion-title>\n  </ion-navbar>\n\n</ion-header>\n<ion-content>\n    <div *ngIf="!cargar" style="text-align: center">    \n      <ion-spinner name="circles"></ion-spinner><br>\n      <b>Cargando...</b>\n    </div>\n\n    <ion-list *ngIf="cargar">\n      <ion-item-group> \n        \n        <ion-item class="all0">\n            <ion-label></ion-label>\n            <ion-badge item-end class="ion-info" w50>\n                {{item.qty_available}} {{item.uom_id[[\'name\']]}}\n            </ion-badge>\n        </ion-item>\n        \n        <ion-item class="all0">\n            <ion-label></ion-label>\n            <ion-badge item-end class="ion-info w50">\n                EAN {{item.ean13}}\n            </ion-badge>\n            <ion-badge item-end class="ion-info w50" >\n                REF {{item.default_code}}\n            </ion-badge>\n        </ion-item>\n      </ion-item-group>    \n\n      <ion-item-group [hidden] = "!item[\'quant_ids\']">\n        <ion-item  no-lines class="all0">\n            <ion-label></ion-label>\n            <ion-badge item-start color="odoolight" class="ion-info w50">LOTE </ion-badge>\n            <ion-badge item-start color="odoolight" class="ion-info w50">UBICACION </ion-badge>\n\n        </ion-item>\n        <ion-item *ngFor="let subitem of item[\'quant_ids\']; trackBy: index;" no-lines class="all0">\n          <ion-label></ion-label>\n          <ion-badge item-start color="odoo" class="ion-info w50" (click)="open(\'stock.production.lot\', subitem[\'lot_id\'][\'id\'])">\n              {{subitem[\'display_name\']}}\n          </ion-badge>\n          \n          <ion-badge item-start color="white" class="ion-info w50" (click)="open(\'stock.location\', subitem[\'location_id\'][\'id\'])">\n            {{subitem[\'location_id\'][\'name\']}}\n          </ion-badge>\n        </ion-item>\n      </ion-item-group>\n            \n    </ion-list>\n</ion-content>\n'/*ion-inline-end:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/product/product.html"*/,
+            selector: 'page-product',template:/*ion-inline-start:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/product/product.html"*/'<!--\n  Generated template for the ProductPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n\n  <ion-navbar>\n    <ion-title>{{item && item.display_name || "Cargando ..."}}</ion-title>\n  </ion-navbar>\n\n</ion-header>\n<ion-content>\n    <div *ngIf="!cargar" style="text-align: center">    \n      <ion-spinner name="circles"></ion-spinner><br>\n      <b>Cargando...</b>\n    </div>\n\n    <ion-list *ngIf="cargar">\n      <ion-item-group> \n        \n        <ion-item class="all0">\n            <ion-label></ion-label>\n            <ion-badge item-end class="ion-info" w50>\n                {{item.qty_available}} {{item.uom_id[[\'name\']]}}\n            </ion-badge>\n        </ion-item>\n        \n        <ion-item class="all0">\n            <ion-label></ion-label>\n            <ion-badge item-end class="ion-info w50">\n                EAN {{item.ean13}}\n            </ion-badge>\n            <ion-badge item-end class="ion-info w50" >\n                REF {{item.default_code}}\n            </ion-badge>\n        </ion-item>\n      </ion-item-group>    \n\n      <ion-item-group [hidden] = "!item[\'quant_ids\']">\n        <ion-item  no-lines class="all0">\n            <ion-label></ion-label>\n            <ion-badge item-start color="odoolight" class="ion-info w50">LOTE </ion-badge>\n            <ion-badge item-start color="odoolight" class="ion-info w50">UBICACION </ion-badge>\n\n        </ion-item>\n        <ion-item *ngFor="let subitem of item[\'quant_ids\']; trackBy: index;" no-lines class="all0">\n          <ion-label></ion-label>\n          <ion-badge item-start color="odoo" class="ion-info w50" (click)="open(\'stock.production.lot\', subitem[\'lot_id\'][\'id\'])">\n              {{subitem[\'display_name\']}}\n          </ion-badge>\n          \n          <ion-badge item-start color="white" class="ion-info w50" (click)="open(\'stock.location\', subitem[\'location_id\'][\'id\'])">\n            {{subitem[\'location_id\'][\'name\']}}\n          </ion-badge>\n        </ion-item>\n      </ion-item-group>\n            \n    </ion-list>\n</ion-content>\n\n<ion-footer>\n  <form [formGroup]="barcodeForm" class ="alignBottom">\n    <ion-item  >\n      <ion-label color="odoo" item-start>Scan: </ion-label>\n      <ion-input #scan [formControl]="barcodeForm.controls[\'scan\']" type="text" name="scan" placeholder = "Scan printer" autofocus></ion-input>\n        <button ion-button icon-only item-end clear (click)="submitScan()">\n        <ion-icon name="print"></ion-icon>\n        </button>\n    </ion-item>\n  </form>\n\n  <ion-item>\n      <button ion-button color="primary" item-end (click)="print(model, item.id)"><ion-icon name="print"></ion-icon></button>\n  </ion-item>\n  \n</ion-footer>\n\n'/*ion-inline-end:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/product/product.html"*/,
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */], __WEBPACK_IMPORTED_MODULE_2__ionic_storage__["b" /* Storage */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]])
+        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */]) === "function" && _f || Object])
     ], ProductPage);
     return ProductPage;
-    var ProductPage_1;
+    var ProductPage_1, _a, _b, _c, _d, _e, _f;
 }());
 
 //# sourceMappingURL=product.js.map

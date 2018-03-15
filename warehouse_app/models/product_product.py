@@ -27,7 +27,7 @@ class ProductProduct(models.Model):
             return newer_quant.location_id
 
     @api.multi
-    def print_product_tag_report(self):
+    def print_barcode_tag_report(self):
         self.ensure_one()
         custom_data = {
             'product_id': self.id,

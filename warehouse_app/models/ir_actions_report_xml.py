@@ -18,7 +18,7 @@ class PrintingPrinter(models.Model):
     warehouse_location = fields.Many2one('stock.location')
 
 
-    
+
 
 
 class IrActionsReportXml(models.Model):
@@ -32,7 +32,8 @@ class IrActionsReportXml(models.Model):
         results = super(IrActionsReportXml, self).behaviour()
         import ipdb; ipdb.set_trace()
         force_printer = self._context.get('force_printer', False)
-        printer = self.env('printers').search([('barcode', '=', force_printer)])
+        printer_id = self._context.get('printer_id', False)
+        printer = self.env('printers').browse(printer_id)
         if force_printer and printer:
             for result in results:
                 results[result]['printer']= printer

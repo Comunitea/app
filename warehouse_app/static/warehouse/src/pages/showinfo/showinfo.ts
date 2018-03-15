@@ -43,7 +43,6 @@ export class ShowinfoPage {
     console.log('ionViewDidLoad ShowinfoPage');
   }
 
-
 submitScan(){
 
   var values = {'model':  ['stock.quant.package', 'stock.production.lot', 'stock.location', 'product.product'], 'search_str' : this.barcodeForm.value['scan']};

@@ -209,6 +209,32 @@ class WarehouseApp (models.Model):
 
 
 
+    def print_tag(self, values):
+        print "Recibo %s"%values
+        printer_barcode = vals.get('printer_barcode', False)
+        
+        if printer_barcode:
+            ctx = self._context.copy()
+            printer = self.env['printers'].search(['barcode', '=', vals.get('printer_barcode')], limit=1)
+
+        
+        if printer:
+            #force_printer = self._context.get('force_printer', False)
+            #printer_id = self._context.get('printer_id', False)
+            ctx['printer_id'] = printer.id
+            ctx['force_printer'] = True
+            obj = self.env[values.get('model')].with_context(ctx).browse(values.get('id'))
+        
+        else:
+            obj = self.env[values.get('model')].browse(values.get('id'))
+        
+        if obj:
+            obj.print_barcode_tag_report()
+        return True
+        
+
+
+
     @api.model
     def get_object_id_V10(self, vals):
 

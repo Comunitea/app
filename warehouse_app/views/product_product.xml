@@ -8,7 +8,7 @@
             <field name="inherit_id" ref="stock.product_form_view_procurement_button"/>
             <field name="arch" type="xml">
                 <header position="inside">
-                    <button name="print_product_tag_report"
+                    <button name="print_barcode_tag_report"
                             type="object" string="Print Tag"/>
                 </header>
             </field>
