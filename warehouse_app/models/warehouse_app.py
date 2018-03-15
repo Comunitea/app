@@ -129,11 +129,32 @@ class WarehouseApp (models.Model):
         else:
             return False
 
-    def get_o2m_vals(self, object_id, field):
 
-        submodel = object_id.fields_get(field)[field]['relation']  #if vals['product_id']:
+
+    def get_order_self(self, objs, field_to_order):
+        ##  Si en el contexto viene algo como:
+        ## 'o2m_order': {'pack_operation_ids': {'field': 'picking_order', 'reverse': False}}
+        print "Ordeno ....."
+        sorted_ = self._context.get('o2m_order', False)
+        if sorted_:
+            sorted = sorted_.get(field_to_order, False)
+            if sorted:
+                sorted_field = sorted.get('field') 
+                sorted_order = sorted.get('reverse', False)
+                print "-----------------SI"
+                return objs.sorted(lambda x: x[sorted_field], reverse=sorted_order)
+
+        print "-----------------NO"
+        return objs
+
+
+    def get_o2m_vals(self, object_id, field):
+        
+        submodel = object_id.fields_get(field)[field]['relation']  
         sub_model_id_values = []
-        for sub_model_id in object_id[field]:
+
+        objs = self.get_order_self(object_id[field], field)
+        for sub_model_id in objs:
             sub_values = {}
             for sub_field in INFO_FIELDS_M2O[submodel]:
                 if sub_model_id.fields_get(sub_field)[sub_field]['type'] == 'many2one':
@@ -154,27 +175,27 @@ class WarehouseApp (models.Model):
     def get_object_id(self, vals):
 
         print "Recibo %s con contexto %s" % (vals, self._context)
+
         model = vals.get('model', False)
         id = vals.get('id', False)
+        ##OPCION 1: Recibo id y model: Devuelvo get_info_object
+
         if id and model:
             res = self.get_info_object({'id': id, 'model': model})
             print res
             return res
 
-        #object_id = False
-        #res = {}
-        #return_object = vals.get('return_object', False)
-        #field_value = {}
+        order = vals.get('search_order', False)
         default_domain = vals.get('domain', False)
         search_str = vals.get('search_str')
-
+        ##OPCION 2: Recibo una cadena para buscarla en los model que me lleguen: Devuelvo get_info_object con el primer id que encuentre
         if search_str:
             search_options = list(set(SEARCH_OPTIONS.keys()) & set(model))
             for option in search_options:
                 domain = [(SEARCH_OPTIONS[option], '=', search_str)]
                 if default_domain:
                     domain += default_domain
-                val_id = self.env[option].search_read(domain, ['id'], limit=1)
+                val_id = self.env[option].search_read(domain, ['id'], order=order, limit=1)
                 if val_id:
                     id = val_id[0]['id']
                     break
@@ -182,8 +203,7 @@ class WarehouseApp (models.Model):
         if id:
             res = self.get_info_object({'id': id, 'model': option})
         else:
-            res = {'model': SEARCH_OPTIONS.keys(), 'id': 0,  'message': 'No se ha encontrado un objeto para %s'%search_str}
-
+            res = {'model': model, 'id': 0,  'message': 'No se ha encontrado un objeto para %s'%search_str}
         print "Retorno %s"%res
         return res
 

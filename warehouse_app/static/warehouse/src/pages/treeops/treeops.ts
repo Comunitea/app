@@ -42,7 +42,7 @@ export class TreeopsPage {
   pick_id = 0
   limit = 25
   offset = 0
-  order = 'picking_order, pda_product_id asc'
+  order = 'picking_order asc, pda_product_id asc'
   model = 'stock.pack.operation'
   source_model = 'stock.picking'
   domain = []
@@ -50,7 +50,7 @@ export class TreeopsPage {
   record_count = 0
   isPaquete: boolean = true;
   isProducto: boolean = false;
-  
+  reverse
   scan = ''
   treeForm: FormGroup;
   model_fields = {'stock.quant.package': 'package_id', 'stock.location': 'location_id', 'stock.production.lot': 'lot_id'}
@@ -60,16 +60,13 @@ export class TreeopsPage {
   constructor(public navCtrl: NavController, public navParams: NavParams,  private formBuilder: FormBuilder,public alertCtrl: AlertController, private storage: Storage) {
     this.aux = new AuxProvider
     this.pick = {};
+    this.reverse = false
     this.pick_id = this.navParams.data.picking_id;
     this.source_model = this.navParams.data.source_model;
+    
     this.record_count = 0;    
     this.scan = '';
-    this.storage.get('WhatOps').then((val) => {
-      if (val==null) {
-        this.whatOps='Todas'} 
-      else {
-        this.whatOps = val}
-      })
+    this.whatOps = this.navParams.data.filter || 'Pendientes' ;
     this.treeForm = this.formBuilder.group({
       scan: ['']
     });
@@ -83,7 +80,10 @@ export class TreeopsPage {
     if (this.whatOps=='Todas'){
       this.whatOps='Pendientes'
     }
-    else
+    else if (this.whatOps=='Pendientes')
+      {this.whatOps='Realizadas'}
+    
+    else if (this.whatOps=='Realizadas')
       {this.whatOps='Todas'}
     this.storage.set('WhatOps', this.whatOps); 
   }
@@ -105,8 +105,8 @@ export class TreeopsPage {
     if (id==0){
       id = this.pick_id
     }
+    var context = {'o2m_order':{'pack_operation_ids': {field: 'picking_order', reverse: self.reverse}}}
     var values = {'id': id, 'model': this.source_model}
-
     self.storage.get('CONEXION').then((val) => {
       if (val == null) {
         console.log('No hay conexión');
@@ -117,7 +117,8 @@ export class TreeopsPage {
           var odoo = new OdooApi(con.url, con.db);
           odoo.login(con.username, con.password).then(
             function (uid) {
-              odoo.call(model, method, values).then(
+              odoo.context
+              odoo.call(model, method, values, context).then(
                 function (res) {
               
                   if (res['id']!=0){
@@ -171,7 +172,7 @@ export class TreeopsPage {
   }
 
   openOp(op_id, op_id_index){
-    this.navCtrl.push(SlideopPage, {op_id: op_id, index: op_id_index, ops: this.pick['pack_operation_ids'], pick_id: this.pick_id, source_model:this.source_model})
+    this.navCtrl.push(SlideopPage, {op_id: op_id, index: op_id_index, ops: this.pick['pack_operation_ids'], pick_id: this.pick_id, source_model:this.source_model, filter: this.whatOps})
   }
 
   submitScan (){

@@ -207,17 +207,17 @@ class StockPackOperation (models.Model):
         id = vals.get('id', False)
         do_id = vals.get('do_id', True)
         op = self.browse([id])
-        qty = vals.get('qty', op.qty_done or 0)
+        qty = vals.get('qty', op.qty_done or op.product_qty or 0.00)
 
 
         if not op:
             return False
         if do_id:
-            qty_done = float(qty) or op.product_qty
+            qty_done = float(qty)
         else:
             qty_done = 0.0
 
-        next_id = op.return_next_op(do_id)
+        #next_id = op.return_next_op(do_id)
         op.write({'pda_done': do_id,
                   'qty_done': qty_done})
 
@@ -230,8 +230,8 @@ class StockPackOperation (models.Model):
 
             if new_op:
                 new_id = new_op[0]
-
-        return next_id
+        print "Retorno %s" %do_id
+        return do_id
 
     def get_result_package(self):
         #POara heredar si es necesario

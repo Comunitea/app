@@ -54,23 +54,26 @@
         </ion-item>
     </ion-item-group>    
     
-    <ion-item-group *ngFor="let item of pick.pack_operation_ids; trackBy: index;">
-      <ion-item-group [hidden] = "whatOps=='Pendientes' && item.qty_done">
+    <ion-item-group *ngFor="let item of pick.pack_operation_ids; index as item_index; trackBy: index">
+      <ion-item-group [hidden] = "whatOps=='Pendientes' && item.pda_done || whatOps=='Realizadas' && !item.pda_done">
         <ion-item no-lines class="all0">
           <ion-label></ion-label>
-          <button ion-button item-end (click)="openOp(item.id, item.index)" class='buttonProduct w100'> {{item.pda_product_id && item.pda_product_id.name || ''}}</button>
+          <button ion-button item-end (click)="openOp(item.id, item_index)" class='buttonProduct w100'> {{item.pda_product_id && item.pda_product_id.name || ''}}</button>
         </ion-item>
         <ion-item class="all0">
-          <ion-label></ion-label>
-          <ion-badge item-end class="ion-info" [hidden] = "!item.package_id && !item.lot_id">
+          <ion-label>I:{{item_index}}</ion-label>
+          <ion-badge item-end class="ion-info w33" [hidden] = "!item.package_id && !item.lot_id">
               {{item.package_id && item['package_id']['name'] || item.lot_id && item['lot_id'][1]}}
           </ion-badge>
+
           <ion-select class ="w33" [hidden]="item.tracking != 'serial'" placeholder ="Nº de serie">
             <ion-option *ngFor="let pack_lot of item.pack_lot_ids; trackBy: index;" value="pack_lot.id">{{ pack_lot.lot_id.name}}</ion-option>
           </ion-select>
+          
           <ion-badge [hidden]="item.tracking != 'serial'" item-end class="ion-info w33" color='danger'[ngClass]="{'badge_0': item.qty_done}">
             {{ (item.pda_done && item.qty_done) || item.product_qty }}  {{item.product_uom_id && item.product_uom_id.name}}
           </ion-badge> 
+          
           <ion-badge [hidden]="item.tracking == 'serial'" item-end class="ion-info w33" color='danger'[ngClass]="{'badge_0': item.pda_done}">
             {{ (item.pda_done && item.qty_done) || item.product_qty }}  {{item.product_uom_id && item.product_uom_id.name}}
           </ion-badge> 

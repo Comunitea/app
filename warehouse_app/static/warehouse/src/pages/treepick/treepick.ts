@@ -63,7 +63,7 @@ export class TreepickPage {
       else {
         var con = val;
         var domain = [];
-        domain.push(['pack_operation_exist', '!=', false])
+        
         
         var odoo = new OdooApi(con.url, con.db);
         odoo.login(con.username, con.password).then(

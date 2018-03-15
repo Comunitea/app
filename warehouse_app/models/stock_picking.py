@@ -113,7 +113,6 @@ class StockPicking(models.Model):
         for pick in self: 
             if pick.state in ('assigned', 'partially_available'):
                 pick.picking_ids.set_picking_order()
-                pick.state ="assigned"
             else:
                 raise ValidationError (_("Pick state not valid"))
 

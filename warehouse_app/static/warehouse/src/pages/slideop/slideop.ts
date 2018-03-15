@@ -74,15 +74,24 @@ export class SlideopPage {
   last_qty : number = 0.00
   orig_model = ''
   pick_id
-  
+  filter
   constructor(public navCtrl: NavController, public modalCtrl: ModalController, public toastCtrl: ToastController, public navParams: NavParams, private formBuilder: FormBuilder, public alertCtrl: AlertController, private storage: Storage) {
     
     this.op_id = this.navParams.data.op_id;
     this.source_model = this.navParams.data.source_model;
+    this.filter = this.navParams.data.filter || 'Todas';
     this.pick_id = this.navParams.data.pick_id;
     this.index = Number(this.navParams.data.index || 0);
-    this.ops = this.navParams.data.ops;
 
+    if (this.filter=='Pendientes'){
+      this.ops = this.navParams.data.ops.filter(id => !id['pda_done'] )
+    }
+    else if (this.filter=='Realizadas'){
+      this.ops = this.navParams.data.ops.filter(id => id['pda_done'] )
+    }
+    else {
+      this.ops = this.navParams.data.ops;
+    }
     this.last_id = this.op_id
     this.last_qty = 0.00
     this.pick = []
@@ -433,35 +442,30 @@ submit (values){
       }
     });
   }
-  
-  get_next_op(id, index){
 
-    var self = this;
-    let domain = []
-    
-    var ops = self.ops.filter(function (op) {
-      return op.pda_done == false && op.id != id}
-    )
-    console.log(ops)
-    if (ops.length==0) {
+  check_index(inc){
+    if (this.ops.length==0){
       return false
     }
-    index = index + 1;
-    
-    if (index > (self.ops.length-1)) {
-      index = 0;
-    };
-
-    if (self.op[index].pda_done) {
-        return self.get_next_op(id, index)
-      }
-    return self.ops[index]['id'] || false
-    
+    this.index += inc
+    if (this.index > this.ops.length){
+      this.index=0
+    }
+    if (this.index <0){
+      this.index = this.ops.length
+    }
   }
 
+  load_next_op(){
+    if (this.ops.length==0){
+      this.navCtrl.push(TreeopsPage, {pick_id:this.pick_id, source_model:this.source_model, filter: this.filter} )
+    }
+    this.op_id = this.ops[this.index]['id']
+    this.loadOpObj(this.op_id)
+  }
+  
   doOp(id){
     if (this.check_changes()){return}
-    
     var self = this;
     self.cargar = true;
     var model = 'stock.pack.operation'
@@ -475,30 +479,20 @@ submit (values){
         self.navCtrl.setRoot(HomePage, {borrar: true, login: null});
       } else {
           console.log('Hay conexión');
+          self.cargar = false
           var con = val;
           var odoo = new OdooApi(con.url, con.db);
           odoo.login(con.username, con.password).then(
             function (uid) {
               odoo.call(model, method, values).then(
                 function (value) {
-                  {setTimeout(() => {
-                    self.ops[self.index]['pda_done'] = true
-                    self.op['pda_done'] = true
-                    self.cargar = false;
-                    if (self.get_next_op(id, self.index)==false) {
-                      self.navCtrl.push(TreeopsPage, {pick_id:this.pick_id, source_model:this.source_model} )
-                      }
-                    else {
-                      if (Boolean(value)){
-                        id = self.get_next_op(id, self.index)
-                        self.loadOpObj(id)
-                      }
-                      else {
-                        self.presentToast(value);
-                        self.loadOpObj(id)
-                      }
-                    }
-                  }, 1);}
+                  self.op['pda_done'] = true
+                  if (self.filter=='Pendientes'){
+                    self.ops.splice(self.index, 1)
+                  }
+                  self.load_next_op()
+                  
+                  
 
                 },
                 function () {

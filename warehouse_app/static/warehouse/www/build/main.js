@@ -76,9 +76,18 @@ var SlideopPage = (function () {
         this.orig_model = '';
         this.op_id = this.navParams.data.op_id;
         this.source_model = this.navParams.data.source_model;
+        this.filter = this.navParams.data.filter || 'Todas';
         this.pick_id = this.navParams.data.pick_id;
         this.index = Number(this.navParams.data.index || 0);
-        this.ops = this.navParams.data.ops;
+        if (this.filter == 'Pendientes') {
+            this.ops = this.navParams.data.ops.filter(function (id) { return !id['pda_done']; });
+        }
+        else if (this.filter == 'Realizadas') {
+            this.ops = this.navParams.data.ops.filter(function (id) { return id['pda_done']; });
+        }
+        else {
+            this.ops = this.navParams.data.ops;
+        }
         this.last_id = this.op_id;
         this.last_qty = 0.00;
         this.pick = [];
@@ -396,25 +405,24 @@ var SlideopPage = (function () {
             }
         });
     };
-    SlideopPage.prototype.get_next_op = function (id, index) {
-        var self = this;
-        var domain = [];
-        var ops = self.ops.filter(function (op) {
-            return op.pda_done == false && op.id != id;
-        });
-        console.log(ops);
-        if (ops.length == 0) {
+    SlideopPage.prototype.check_index = function (inc) {
+        if (this.ops.length == 0) {
             return false;
         }
-        index = index + 1;
-        if (index > (self.ops.length - 1)) {
-            index = 0;
+        this.index += inc;
+        if (this.index > this.ops.length) {
+            this.index = 0;
         }
-        ;
-        if (self.op[index].pda_done) {
-            return self.get_next_op(id, index);
+        if (this.index < 0) {
+            this.index = this.ops.length;
         }
-        return self.ops[index]['id'] || false;
+    };
+    SlideopPage.prototype.load_next_op = function () {
+        if (this.ops.length == 0) {
+            this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_4__treeops_treeops__["a" /* TreeopsPage */], { pick_id: this.pick_id, source_model: this.source_model, filter: this.filter });
+        }
+        this.op_id = this.ops[this.index]['id'];
+        this.loadOpObj(this.op_id);
     };
     SlideopPage.prototype.doOp = function (id) {
         if (this.check_changes()) {
@@ -433,31 +441,16 @@ var SlideopPage = (function () {
             }
             else {
                 console.log('Hay conexión');
+                self.cargar = false;
                 var con = val;
                 var odoo = new OdooApi(con.url, con.db);
                 odoo.login(con.username, con.password).then(function (uid) {
                     odoo.call(model, method, values).then(function (value) {
-                        var _this = this;
-                        {
-                            setTimeout(function () {
-                                self.ops[self.index]['pda_done'] = true;
-                                self.op['pda_done'] = true;
-                                self.cargar = false;
-                                if (self.get_next_op(id, self.index) == false) {
-                                    self.navCtrl.push(__WEBPACK_IMPORTED_MODULE_4__treeops_treeops__["a" /* TreeopsPage */], { pick_id: _this.pick_id, source_model: _this.source_model });
-                                }
-                                else {
-                                    if (Boolean(value)) {
-                                        id = self.get_next_op(id, self.index);
-                                        self.loadOpObj(id);
-                                    }
-                                    else {
-                                        self.presentToast(value);
-                                        self.loadOpObj(id);
-                                    }
-                                }
-                            }, 1);
+                        self.op['pda_done'] = true;
+                        if (self.filter == 'Pendientes') {
+                            self.ops.splice(self.index, 1);
                         }
+                        self.load_next_op();
                     }, function () {
                         self.cargar = false;
                         self.presentAlert('Falla!', 'Imposible conectarse');
@@ -829,12 +822,11 @@ var SlideopPage = (function () {
     ], SlideopPage.prototype, "myQty", void 0);
     SlideopPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'page-slideop',template:/*ion-inline-start:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/slideop/slideop.html"*/'<!--\n  Generated template for the SlideopPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n  <ion-navbar color="primary">\n      <button ion-button icon-only menuToggle>\n        <ion-icon name="menu"></ion-icon>\n      </button>\n      <ion-title [hidden]="!op">\n        {{source_model  }} \n        {{ pick.name}} / {{op.picking_id && op.picking_id.name}}\n        [{{ op.id }}] {{index}} \n        [{{op.picking_id && op.picking_id.user_id && op.picking_id.user_id.name}}]\n      </ion-title>\n      <ion-buttons end>\n        \n        <button ion-button (click)="goHome()">\n          <ion-icon name="home"></ion-icon>\n        </button>\n    </ion-buttons>\n  </ion-navbar>\n  <h2 class="danger" [hidden]="message == \'\'">{{ message }}</h2>\n</ion-header>\n<ion-content>\n  <div *ngIf="!op" style="text-align: center">    \n    <ion-spinner name="circles"></ion-spinner><br>\n    <b>Cargando...</b>\n  </div>\n    <ion-list *ngIf="op">\n        <ion-item-group> \n          <ion-item no-lines [ngClass]="{\'no_ok\': state<2, \'ok\': state==2}">\n            <ion-label item-start>\n                ORIGEN\n            </ion-label>\n            <ion-icon name="repeat" item-end color="danger" (click)="resetForm()"></ion-icon>\n          </ion-item>\n          \n          <ion-item>\n              <ion-label color="primary"></ion-label>\n              <button ion-button outline item-end full [ngClass]="{\'buttonOp_ok\': waiting > 2, \'buttonOp\': waiting <= 2}"\n                    (click)="scanValue(\'product.product\', op.pda_product_id && op.pda_product_id.barcode)">{{op.pda_product_id && op.pda_product_id.name}}</button>\n          </ion-item>\n          <ion-item [hidden] = "!op.package_id">\n            <button ion-button outline item-end (click)="scanValue(\'stock.quant.package\', op.package_id && op.package_id.name)"  [ngClass]="{\'buttonOp_ok\': waiting > 1, \'buttonOp\': waiting <= 1}">{{op.package_id && op.package_id.name}}</button>\n            <ion-toggle [(ngModel)]="!op.product_id"  (ionChange)="change_package_qty()" item-start ></ion-toggle>\n          </ion-item>\n\n          <ion-item [hidden] = "op.tracking && op.tracking.value == \'none\'">\n              <ion-label color="primary" >Lote/Nº [ {{ (op.pack_lot_ids && (op.pack_lot_ids.length)) }} ]</ion-label>\n              <button ion-button outline item-end (click)="showSerial(op)"><ion-icon name="eye"></ion-icon></button>\n              <button ion-button outline item-end [hidden]="op.pda_done" (click)="addSerial(\'add\')"><ion-icon name="add"></ion-icon></button>\n              <button ion-button outline item-end [hidden]="op.pda_done || (op.pack_lot_ids && !op.pack_lot_ids.length)" (click)="addSerial(\'remove\')"><ion-icon name="trash"></ion-icon></button>\n          </ion-item>\n\n          <ion-item [hidden] = "true || op.tracking && op.tracking.value != \'lot\'">\n              <ion-label color="primary">Lote</ion-label>\n              <button ion-button outline item-end [ngClass]="{\'buttonOp_ok\': waiting != 2, \'buttonOp\': waiting == 2}" (click)="scanValue(\'stock.production.lot\', op.lot_id && op.lot_id.name)">{{op.lot_id && op.lot_id.name}}</button>\n          </ion-item>\n         \n          <ion-item [hidden] = "package_qty">\n            <ion-label color="primary">Qty: {{op.product_qty }}</ion-label>\n            <button ion-button no-lines item-end (click)="inputQty()"> {{ op_selected.qty_done }} {{ op.pda_product_id && op.pda_product_id.uom_id && op.pda_product_id.uom_id.name}}</button>\n            <button ion-button outline item-end [hidden]="op.pda_done || op.tracking && op.tracking.value != \'none\'" (click)="addQty(op.id, 1.00)" [hidden] = "op.tracking == \'serial\'"><ion-icon name="add"></ion-icon></button>\n            <button ion-button outline item-end [hidden]="op.pda_done || op.tracking && op.tracking.value != \'none\'" (click)="addQty(op.id, -1.00)" [hidden] = "op.tracking == \'serial\'"><ion-icon name="remove"></ion-icon></button>\n          </ion-item>\n          <ion-item>\n              <ion-label color="primary" >De</ion-label>\n              <button ion-button outline item-end [ngClass]="{\'buttonOp_ok\': waiting != 4, \'buttonOp\': waiting == 4}" (click)="scanValue(\'stock.location\', op.location_id.barcode)">\n                {{op.location_id && op.location_id.name}}\n              </button>\n          </ion-item>\n        </ion-item-group>\n\n        <ion-item-group>\n          <ion-item no-lines [ngClass]="{\'no_ok\': waiting<10}">\n            <ion-label class="bold" item-start onclick="set_dest()">\n              DESTINO\n            </ion-label>\n          </ion-item>\n          <ion-item>\n            <ion-label></ion-label>\n            <!--ion-icon name="log-out" [hidden] = "op.result_package_id" item-start color="danger" (click)="no_result_package(\'orig\')"></ion-icon>\n            <ion-icon name="log-in" [hidden] = "!op.result_package_id && op_selected.result_package_id" item-start color="secondary" (click)="no_result_package(\'none\')"></ion-icon>\n            <button ion-button name="log_out" [hidden] = "op.result_package_id" item-start color="odoo" (click)="no_result_package(\'orig\')">Empaquetar</button>\n\n            <button ion-button name="log_in" [hidden] = "!op.result_package_id && op_selected.result_package_id" item-start color="odoo" (click)="no_result_package(\'none\')">Sin paquete</button>\n            <button ion-button name="new_result_package" [hidden] = "result_package_id == -1" item-start color="odoo" (click)="no_result_package(\'new\')">Nuevo</button-->\n            \n            <button ion-button outline item-start [hidden]="op.pda_done" (click)="no_result_package(\'new\')" [hidden] = "result_package_id ==-1" ><ion-icon name="color-wand"></ion-icon></button>\n            <button ion-button outline item-start [hidden]="op.pda_done" (click)="no_result_package(\'orig\')" [hidden] = "op.result_package_id" ><ion-icon name="home"></ion-icon></button>\n            <button ion-button outline item-start [hidden]="op.pda_done" (click)="no_result_package(\'none\')" [hidden] = "!op.result_package_id && op_selected.result_package_id"><ion-icon name="trash"></ion-icon></button>    \n\n\n            <button ion-button outline item-end [hidden] = "!op_selected.result_package_id" (click)="scanValue(\'stock.quant.package\', op.result_package_id.name)"\n            [ngClass]="{\'buttonOp_ok\': waiting != 7, \'buttonOp\': waiting == 7}">\n              {{op_selected.result_package_id && op_selected.result_package_id.name}}\n            </button>\n          </ion-item>\n          <ion-item>\n            <ion-label color="primary">A</ion-label>\n            <button ion-button outline item-end (click)="scanValue(\'stock.location\', op.location_dest_id.barcode)"\n            [ngClass]="{\'buttonOp_ok\': waiting != 8, \'buttonOp\': waiting == 8}">\n              {{op.location_dest_id && op.location_dest_id.name}}\n            </button>\n            <ion-toggle [(ngModel)]="op.location_dest_id && op.location_dest_id.need_check"></ion-toggle>\n          </ion-item>\n        </ion-item-group>\n        <ion-item>\n          Estado: {{state}} Espero {{waiting}} Tipo {{op.tracking && op.tracking.value}}\n        </ion-item>\n        <ion-item>\n            Type: {{source_model}} {{pick && pick.name}}\n          </ion-item>\n      </ion-list>\n  \n      \n  \n</ion-content>\n<ion-footer>\n    <form [formGroup]="barcodeForm" class ="alignBottom" [hidden] = "op && op.pda_done">\n        <ion-item>\n           <ion-label color="odoo" item-start>Scan: </ion-label>\n           <ion-input #scan [formControl]="barcodeForm.controls[\'scan\']" type="text" name="scan" placeholder = "Scan"  autofocus></ion-input>\n          \n           <button ion-button icon-only item-end clear (click)="submitScan()">\n             <ion-icon name="barcode"></ion-icon>                  \n           </button>\n         </ion-item>   \n       </form>\n</ion-footer>\n\n\n'/*ion-inline-end:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/slideop/slideop.html"*/,
+            selector: 'page-slideop',template:/*ion-inline-start:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/slideop/slideop.html"*/'<!--\n  Generated template for the SlideopPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n  <ion-navbar [ngClass]="{\'pickdone\': op.pda_done}" color="primary">\n      <button ion-button icon-only menuToggle>\n        <ion-icon name="menu"></ion-icon>\n      </button>\n      <ion-title [hidden]="!op" >\n        {{source_model  }} \n        {{ pick.name}} / {{op.picking_id && op.picking_id.name}}\n        [{{ op.id }}] {{index}} \n        [{{op.picking_id && op.picking_id.user_id && op.picking_id.user_id.name}}]\n      </ion-title>\n      <ion-buttons end>\n        \n        <button ion-button (click)="goHome()">\n          <ion-icon name="home"></ion-icon>\n        </button>\n    </ion-buttons>\n  </ion-navbar>\n  <h2 class="danger" [hidden]="message == \'\'">{{ message }}</h2>\n</ion-header>\n<ion-content>\n  <div *ngIf="!op" style="text-align: center">    \n    <ion-spinner name="circles"></ion-spinner><br>\n    <b>Cargando...</b>\n  </div>\n    <ion-list *ngIf="op">\n        <ion-item-group> \n          <ion-item no-lines [ngClass]="{\'no_ok\': state<2, \'ok\': state==2}">\n            <ion-label item-start>\n                ORIGEN\n            </ion-label>\n            <ion-icon name="repeat" item-end color="danger" (click)="resetForm()"></ion-icon>\n          </ion-item>\n          \n          <ion-item>\n              <ion-label color="primary"></ion-label>\n              <button ion-button outline item-end full [ngClass]="{\'buttonOp_ok\': waiting > 2, \'buttonOp\': waiting <= 2}"\n                    (click)="scanValue(\'product.product\', op.pda_product_id && op.pda_product_id.barcode)">{{op.pda_product_id && op.pda_product_id.name}}</button>\n          </ion-item>\n          <ion-item [hidden] = "!op.package_id">\n            <button ion-button outline item-end (click)="scanValue(\'stock.quant.package\', op.package_id && op.package_id.name)"  [ngClass]="{\'buttonOp_ok\': waiting > 1, \'buttonOp\': waiting <= 1}">{{op.package_id && op.package_id.name}}</button>\n            <ion-toggle [(ngModel)]="!op.product_id"  (ionChange)="change_package_qty()" item-start ></ion-toggle>\n          </ion-item>\n\n          <ion-item [hidden] = "op.tracking && op.tracking.value == \'none\'">\n              <ion-label color="primary" >Lote/Nº [ {{ (op.pack_lot_ids && (op.pack_lot_ids.length)) }} ]</ion-label>\n              <button ion-button outline item-end (click)="showSerial(op)"><ion-icon name="eye"></ion-icon></button>\n              <button ion-button outline item-end [hidden]="op.pda_done" (click)="addSerial(\'add\')"><ion-icon name="add"></ion-icon></button>\n              <button ion-button outline item-end [hidden]="op.pda_done || (op.pack_lot_ids && !op.pack_lot_ids.length)" (click)="addSerial(\'remove\')"><ion-icon name="trash"></ion-icon></button>\n          </ion-item>\n\n          <ion-item [hidden] = "true || op.tracking && op.tracking.value != \'lot\'">\n              <ion-label color="primary">Lote</ion-label>\n              <button ion-button outline item-end [ngClass]="{\'buttonOp_ok\': waiting != 2, \'buttonOp\': waiting == 2}" (click)="scanValue(\'stock.production.lot\', op.lot_id && op.lot_id.name)">{{op.lot_id && op.lot_id.name}}</button>\n          </ion-item>\n         \n          <ion-item [hidden] = "package_qty">\n            <ion-label color="primary">Qty: {{op.product_qty }}</ion-label>\n            <button ion-button no-lines item-end (click)="inputQty()"> {{ op_selected.qty_done }} {{ op.pda_product_id && op.pda_product_id.uom_id && op.pda_product_id.uom_id.name}}</button>\n            <button ion-button outline item-end [hidden]="op.pda_done || op.tracking && op.tracking.value != \'none\'" (click)="addQty(op.id, 1.00)" [hidden] = "op.tracking == \'serial\'"><ion-icon name="add"></ion-icon></button>\n            <button ion-button outline item-end [hidden]="op.pda_done || op.tracking && op.tracking.value != \'none\'" (click)="addQty(op.id, -1.00)" [hidden] = "op.tracking == \'serial\'"><ion-icon name="remove"></ion-icon></button>\n          </ion-item>\n          <ion-item>\n              <ion-label color="primary" >De</ion-label>\n              <button ion-button outline item-end [ngClass]="{\'buttonOp_ok\': waiting != 4, \'buttonOp\': waiting == 4}" (click)="scanValue(\'stock.location\', op.location_id.barcode)">\n                {{op.location_id && op.location_id.name}}\n              </button>\n          </ion-item>\n        </ion-item-group>\n\n        <ion-item-group>\n          <ion-item no-lines [ngClass]="{\'no_ok\': waiting<10}">\n            <ion-label class="bold" item-start onclick="set_dest()">\n              DESTINO\n            </ion-label>\n          </ion-item>\n          <ion-item>\n            <ion-label></ion-label>\n            <!--ion-icon name="log-out" [hidden] = "op.result_package_id" item-start color="danger" (click)="no_result_package(\'orig\')"></ion-icon>\n            <ion-icon name="log-in" [hidden] = "!op.result_package_id && op_selected.result_package_id" item-start color="secondary" (click)="no_result_package(\'none\')"></ion-icon>\n            <button ion-button name="log_out" [hidden] = "op.result_package_id" item-start color="odoo" (click)="no_result_package(\'orig\')">Empaquetar</button>\n\n            <button ion-button name="log_in" [hidden] = "!op.result_package_id && op_selected.result_package_id" item-start color="odoo" (click)="no_result_package(\'none\')">Sin paquete</button>\n            <button ion-button name="new_result_package" [hidden] = "result_package_id == -1" item-start color="odoo" (click)="no_result_package(\'new\')">Nuevo</button-->\n            \n            <button ion-button outline item-start [hidden]="op.pda_done" (click)="no_result_package(\'new\')" [hidden] = "result_package_id ==-1" ><ion-icon name="color-wand"></ion-icon></button>\n            <button ion-button outline item-start [hidden]="op.pda_done" (click)="no_result_package(\'orig\')" [hidden] = "op.result_package_id" ><ion-icon name="home"></ion-icon></button>\n            <button ion-button outline item-start [hidden]="op.pda_done" (click)="no_result_package(\'none\')" [hidden] = "!op.result_package_id && op_selected.result_package_id"><ion-icon name="trash"></ion-icon></button>    \n\n\n            <button ion-button outline item-end [hidden] = "!op_selected.result_package_id" (click)="scanValue(\'stock.quant.package\', op.result_package_id.name)"\n            [ngClass]="{\'buttonOp_ok\': waiting != 7, \'buttonOp\': waiting == 7}">\n              {{op_selected.result_package_id && op_selected.result_package_id.name}}\n            </button>\n          </ion-item>\n          <ion-item>\n            <ion-label color="primary">A</ion-label>\n            <button ion-button outline item-end (click)="scanValue(\'stock.location\', op.location_dest_id.barcode)"\n            [ngClass]="{\'buttonOp_ok\': waiting != 8, \'buttonOp\': waiting == 8}">\n              {{op.location_dest_id && op.location_dest_id.name}}\n            </button>\n            <ion-toggle [(ngModel)]="op.location_dest_id && op.location_dest_id.need_check"></ion-toggle>\n          </ion-item>\n        </ion-item-group>\n        <ion-item>\n          Estado: {{state}} Espero {{waiting}} Tipo {{op.tracking && op.tracking.value}} Index {{ index }}\n        </ion-item>\n        <ion-item>\n            Type: {{source_model}} {{pick && pick.name}}\n          </ion-item>\n      </ion-list>\n  \n      \n  \n</ion-content>\n<ion-footer>\n    <form [formGroup]="barcodeForm" class ="alignBottom" [hidden] = "op && op.pda_done">\n        <ion-item>\n           <ion-label color="odoo" item-start>Scan: </ion-label>\n           <ion-input #scan [formControl]="barcodeForm.controls[\'scan\']" type="text" name="scan" placeholder = "Scan"  autofocus></ion-input>\n          \n           <button ion-button icon-only item-end clear (click)="submitScan()">\n             <ion-icon name="barcode"></ion-icon>                  \n           </button>\n         </ion-item>   \n       </form>\n</ion-footer>\n\n\n'/*ion-inline-end:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/slideop/slideop.html"*/,
         }),
-        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* ModalController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* ModalController */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]) === "function" && _f || Object, typeof (_g = typeof __WEBPACK_IMPORTED_MODULE_6__ionic_storage__["b" /* Storage */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_6__ionic_storage__["b" /* Storage */]) === "function" && _g || Object])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* ModalController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["k" /* ToastController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */], __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_6__ionic_storage__["b" /* Storage */]])
     ], SlideopPage);
     return SlideopPage;
-    var _a, _b, _c, _d, _e, _f, _g;
 }());
 
 //# sourceMappingURL=slideop.js.map
@@ -2397,7 +2389,6 @@ var TreepickPage = (function () {
             else {
                 var con = val;
                 var domain = [];
-                domain.push(['pack_operation_exist', '!=', false]);
                 var odoo = new OdooApi(con.url, con.db);
                 odoo.login(con.username, con.password).then(function (uid) {
                     self.uid = uid;
@@ -3059,7 +3050,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 var TreeopsPage = (function () {
     function TreeopsPage(navCtrl, navParams, formBuilder, alertCtrl, storage) {
-        var _this = this;
         this.navCtrl = navCtrl;
         this.navParams = navParams;
         this.formBuilder = formBuilder;
@@ -3069,7 +3059,7 @@ var TreeopsPage = (function () {
         this.pick_id = 0;
         this.limit = 25;
         this.offset = 0;
-        this.order = 'picking_order, pda_product_id asc';
+        this.order = 'picking_order asc, pda_product_id asc';
         this.model = 'stock.pack.operation';
         this.source_model = 'stock.picking';
         this.domain = [];
@@ -3081,18 +3071,12 @@ var TreeopsPage = (function () {
         this.model_fields = { 'stock.quant.package': 'package_id', 'stock.location': 'location_id', 'stock.production.lot': 'lot_id' };
         this.aux = new __WEBPACK_IMPORTED_MODULE_3__providers_aux_aux__["a" /* AuxProvider */];
         this.pick = {};
+        this.reverse = false;
         this.pick_id = this.navParams.data.picking_id;
         this.source_model = this.navParams.data.source_model;
         this.record_count = 0;
         this.scan = '';
-        this.storage.get('WhatOps').then(function (val) {
-            if (val == null) {
-                _this.whatOps = 'Todas';
-            }
-            else {
-                _this.whatOps = val;
-            }
-        });
+        this.whatOps = this.navParams.data.filter || 'Pendientes';
         this.treeForm = this.formBuilder.group({
             scan: ['']
         });
@@ -3107,7 +3091,10 @@ var TreeopsPage = (function () {
         if (this.whatOps == 'Todas') {
             this.whatOps = 'Pendientes';
         }
-        else {
+        else if (this.whatOps == 'Pendientes') {
+            this.whatOps = 'Realizadas';
+        }
+        else if (this.whatOps == 'Realizadas') {
             this.whatOps = 'Todas';
         }
         this.storage.set('WhatOps', this.whatOps);
@@ -3127,6 +3114,7 @@ var TreeopsPage = (function () {
         if (id == 0) {
             id = this.pick_id;
         }
+        var context = { 'o2m_order': { 'pack_operation_ids': { field: 'picking_order', reverse: self.reverse } } };
         var values = { 'id': id, 'model': this.source_model };
         self.storage.get('CONEXION').then(function (val) {
             if (val == null) {
@@ -3138,7 +3126,8 @@ var TreeopsPage = (function () {
                 var con = val;
                 var odoo = new OdooApi(con.url, con.db);
                 odoo.login(con.username, con.password).then(function (uid) {
-                    odoo.call(model, method, values).then(function (res) {
+                    odoo.context;
+                    odoo.call(model, method, values, context).then(function (res) {
                         if (res['id'] != 0) {
                             self.pick = res['values'];
                             self.cargar = false;
@@ -3174,7 +3163,7 @@ var TreeopsPage = (function () {
         console.log("Do op");
     };
     TreeopsPage.prototype.openOp = function (op_id, op_id_index) {
-        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_5__slideop_slideop__["a" /* SlideopPage */], { op_id: op_id, index: op_id_index, ops: this.pick['pack_operation_ids'], pick_id: this.pick_id, source_model: this.source_model });
+        this.navCtrl.push(__WEBPACK_IMPORTED_MODULE_5__slideop_slideop__["a" /* SlideopPage */], { op_id: op_id, index: op_id_index, ops: this.pick['pack_operation_ids'], pick_id: this.pick_id, source_model: this.source_model, filter: this.whatOps });
     };
     TreeopsPage.prototype.submitScan = function () {
         this.getObjectId({ 'model': ['stock.location', 'stock.quant.package', 'stock.production.lot', 'product.product'], 'search_str': this.treeForm.value['scan'] });
@@ -3296,17 +3285,16 @@ var TreeopsPage = (function () {
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["y" /* HostListener */])('document:keydown', ['$event']),
         __metadata("design:type", Function),
-        __metadata("design:paramtypes", [Object]),
+        __metadata("design:paramtypes", [KeyboardEvent]),
         __metadata("design:returntype", void 0)
     ], TreeopsPage.prototype, "handleKeyboardEvent", null);
     TreeopsPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'page-treeops',template:/*ion-inline-start:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/treeops/treeops.html"*/'<!--\n  Generated template for the TreepickPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n  \n  <ion-navbar color="primary">\n      <button ion-button icon-only menuToggle>\n        <ion-icon name="menu"></ion-icon>\n      </button>\n      <ion-title>{{ pick && pick.name }} [{{ pick[\'remaining_ops\'] }} / {{pick[\'pack_operation_count\']}}]</ion-title>\n      <ion-buttons end>\n        <button ion-button (click)="goHome()">\n          <ion-icon name="home"></ion-icon>\n        </button>\n      </ion-buttons>\n  </ion-navbar>        \n  <!--ion-item no-lines class=\'noPadding\'>   show_in_PDA\n    <ion-label class=\'noPadding\' color="primary"> {{ pick.picking_type_id_name}} </ion-label>\n  </ion-item-->\n  \n</ion-header>\n\n<ion-content padding>\n  \n  <div *ngIf="cargar" style="text-align: center" no-lines >    \n    <ion-spinner name="circles"></ion-spinner><br>\n    <b>Cargando...</b>\n  </div>\n\n  <ion-list [hidden] = "cargar" class="noPadding">\n    <ion-item-group class=\'back_light\'>\n      \n      <ion-item no-lines class=\'all0 back_light\'>   \n        <ion-label></ion-label>\n        <ion-badge item-start color="primary">{{pick.state && pick.state.name}} </ion-badge>\n        <ion-badge item-end color=\'odoo\' (click)="seeAll()">{{whatOps}}</ion-badge>\n        <ion-badge item-end (click)="doTransfer(pick.id)" [hidden]=\'pick.state == "done" || pick.done_ops == 0\' color=\'odoo\'>Validar</ion-badge>\n        <ion-badge item-end (click)="doAssign(pick.id)" [hidden]=\'!pick.user_id\' color=\'odoo\'>Asignarme</ion-badge>\n        \n      </ion-item>\n\n      <ion-item no-lines class=\'all0\'>   \n          <ion-label></ion-label>\n          <ion-badge item-start color="odoo" (click)="open(\'stock.location\', pick[\'location_id\'] && pick[\'location_id\'].id)">\n            {{pick[\'location_id\'] && pick.location_id.name}}\n          </ion-badge>       \n          {{aux.location_badge}}\n          <ion-badge item-start color="odoo" (click)="open(\'stock.location\', pick[\'location_dest_id\'] && pick[\'location_dest_id\'].id)">\n            {{ pick[\'location_dest_id\'] && pick.location_dest_id.name}}\n          </ion-badge>          \n        </ion-item>\n    </ion-item-group>    \n    \n    <ion-item-group *ngFor="let item of pick.pack_operation_ids; trackBy: index;">\n      <ion-item-group [hidden] = "whatOps==\'Pendientes\' && item.qty_done">\n        <ion-item no-lines class="all0">\n          <ion-label></ion-label>\n          <button ion-button item-end (click)="openOp(item.id, item.index)" class=\'buttonProduct w100\'> {{item.pda_product_id && item.pda_product_id.name || \'\'}}</button>\n        </ion-item>\n        <ion-item class="all0">\n          <ion-label></ion-label>\n          <ion-badge item-end class="ion-info" [hidden] = "!item.package_id && !item.lot_id">\n              {{item.package_id && item[\'package_id\'][\'name\'] || item.lot_id && item[\'lot_id\'][1]}}\n          </ion-badge>\n          <ion-select class ="w33" [hidden]="item.tracking != \'serial\'" placeholder ="Nº de serie">\n            <ion-option *ngFor="let pack_lot of item.pack_lot_ids; trackBy: index;" value="pack_lot.id">{{ pack_lot.lot_id.name}}</ion-option>\n          </ion-select>\n          <ion-badge [hidden]="item.tracking != \'serial\'" item-end class="ion-info w33" color=\'danger\'[ngClass]="{\'badge_0\': item.qty_done}">\n            {{ (item.pda_done && item.qty_done) || item.product_qty }}  {{item.product_uom_id && item.product_uom_id.name}}\n          </ion-badge> \n          <ion-badge [hidden]="item.tracking == \'serial\'" item-end class="ion-info w33" color=\'danger\'[ngClass]="{\'badge_0\': item.pda_done}">\n            {{ (item.pda_done && item.qty_done) || item.product_qty }}  {{item.product_uom_id && item.product_uom_id.name}}\n          </ion-badge> \n        </ion-item>\n      </ion-item-group>\n    </ion-item-group>\n  </ion-list>\n   \n\n  </ion-content>\n  <ion-footer>\n      <form [formGroup]="treeForm" class ="alignBottom">\n     <ion-item  >\n        <ion-label color="odoo" item-start>Scan: </ion-label>\n        <ion-input #scanPackage [formControl]="treeForm.controls[\'scan\']" type="text" name="scan" placeholder = "Scan"  autofocus></ion-input>\n       \n        <button ion-button icon-only item-end clear (click)="submitScan()">\n          <ion-icon name="barcode"></ion-icon>\n        </button>\n      </ion-item>   \n    </form>\n  </ion-footer>\n      '/*ion-inline-end:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/treeops/treeops.html"*/,
+            selector: 'page-treeops',template:/*ion-inline-start:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/treeops/treeops.html"*/'<!--\n  Generated template for the TreepickPage page.\n\n  See http://ionicframework.com/docs/components/#navigation for more info on\n  Ionic pages and navigation.\n-->\n<ion-header>\n  \n  <ion-navbar color="primary">\n      <button ion-button icon-only menuToggle>\n        <ion-icon name="menu"></ion-icon>\n      </button>\n      <ion-title>{{ pick && pick.name }} [{{ pick[\'remaining_ops\'] }} / {{pick[\'pack_operation_count\']}}]</ion-title>\n      <ion-buttons end>\n        <button ion-button (click)="goHome()">\n          <ion-icon name="home"></ion-icon>\n        </button>\n      </ion-buttons>\n  </ion-navbar>        \n  <!--ion-item no-lines class=\'noPadding\'>   show_in_PDA\n    <ion-label class=\'noPadding\' color="primary"> {{ pick.picking_type_id_name}} </ion-label>\n  </ion-item-->\n  \n</ion-header>\n\n<ion-content padding>\n  \n  <div *ngIf="cargar" style="text-align: center" no-lines >    \n    <ion-spinner name="circles"></ion-spinner><br>\n    <b>Cargando...</b>\n  </div>\n\n  <ion-list [hidden] = "cargar" class="noPadding">\n    <ion-item-group class=\'back_light\'>\n      \n      <ion-item no-lines class=\'all0 back_light\'>   \n        <ion-label></ion-label>\n        <ion-badge item-start color="primary">{{pick.state && pick.state.name}} </ion-badge>\n        <ion-badge item-end color=\'odoo\' (click)="seeAll()">{{whatOps}}</ion-badge>\n        <ion-badge item-end (click)="doTransfer(pick.id)" [hidden]=\'pick.state == "done" || pick.done_ops == 0\' color=\'odoo\'>Validar</ion-badge>\n        <ion-badge item-end (click)="doAssign(pick.id)" [hidden]=\'!pick.user_id\' color=\'odoo\'>Asignarme</ion-badge>\n        \n      </ion-item>\n\n      <ion-item no-lines class=\'all0\'>   \n          <ion-label></ion-label>\n          <ion-badge item-start color="odoo" (click)="open(\'stock.location\', pick[\'location_id\'] && pick[\'location_id\'].id)">\n            {{pick[\'location_id\'] && pick.location_id.name}}\n          </ion-badge>       \n          {{aux.location_badge}}\n          <ion-badge item-start color="odoo" (click)="open(\'stock.location\', pick[\'location_dest_id\'] && pick[\'location_dest_id\'].id)">\n            {{ pick[\'location_dest_id\'] && pick.location_dest_id.name}}\n          </ion-badge>          \n        </ion-item>\n    </ion-item-group>    \n    \n    <ion-item-group *ngFor="let item of pick.pack_operation_ids; index as item_index; trackBy: index">\n      <ion-item-group [hidden] = "whatOps==\'Pendientes\' && item.pda_done || whatOps==\'Realizadas\' && !item.pda_done">\n        <ion-item no-lines class="all0">\n          <ion-label></ion-label>\n          <button ion-button item-end (click)="openOp(item.id, item_index)" class=\'buttonProduct w100\'> {{item.pda_product_id && item.pda_product_id.name || \'\'}}</button>\n        </ion-item>\n        <ion-item class="all0">\n          <ion-label>I:{{item_index}}</ion-label>\n          <ion-badge item-end class="ion-info w33" [hidden] = "!item.package_id && !item.lot_id">\n              {{item.package_id && item[\'package_id\'][\'name\'] || item.lot_id && item[\'lot_id\'][1]}}\n          </ion-badge>\n\n          <ion-select class ="w33" [hidden]="item.tracking != \'serial\'" placeholder ="Nº de serie">\n            <ion-option *ngFor="let pack_lot of item.pack_lot_ids; trackBy: index;" value="pack_lot.id">{{ pack_lot.lot_id.name}}</ion-option>\n          </ion-select>\n          \n          <ion-badge [hidden]="item.tracking != \'serial\'" item-end class="ion-info w33" color=\'danger\'[ngClass]="{\'badge_0\': item.qty_done}">\n            {{ (item.pda_done && item.qty_done) || item.product_qty }}  {{item.product_uom_id && item.product_uom_id.name}}\n          </ion-badge> \n          \n          <ion-badge [hidden]="item.tracking == \'serial\'" item-end class="ion-info w33" color=\'danger\'[ngClass]="{\'badge_0\': item.pda_done}">\n            {{ (item.pda_done && item.qty_done) || item.product_qty }}  {{item.product_uom_id && item.product_uom_id.name}}\n          </ion-badge> \n        </ion-item>\n      </ion-item-group>\n    </ion-item-group>\n  </ion-list>\n   \n\n  </ion-content>\n  <ion-footer>\n      <form [formGroup]="treeForm" class ="alignBottom">\n     <ion-item  >\n        <ion-label color="odoo" item-start>Scan: </ion-label>\n        <ion-input #scanPackage [formControl]="treeForm.controls[\'scan\']" type="text" name="scan" placeholder = "Scan"  autofocus></ion-input>\n       \n        <button ion-button icon-only item-end clear (click)="submitScan()">\n          <ion-icon name="barcode"></ion-icon>\n        </button>\n      </ion-item>   \n    </form>\n  </ion-footer>\n      '/*ion-inline-end:"/home/kiko/py10/odoo10/odoo-repos/app/warehouse_app/static/warehouse/src/pages/treeops/treeops.html"*/,
         }),
-        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_6__ionic_storage__["b" /* Storage */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_6__ionic_storage__["b" /* Storage */]) === "function" && _e || Object])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* NavParams */], __WEBPACK_IMPORTED_MODULE_2__angular_forms__["a" /* FormBuilder */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_6__ionic_storage__["b" /* Storage */]])
     ], TreeopsPage);
     return TreeopsPage;
-    var _a, _b, _c, _d, _e;
 }());
 
 //# sourceMappingURL=treeops.js.map

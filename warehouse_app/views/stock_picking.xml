@@ -20,7 +20,7 @@
                     <label for="user_id" />
                     <div>
                         <field name="user_id" class="oe_inline"/> 
-                        <button name="send_wave_to_pda" class="oe_inline" type="object" groups="stock.group_stock_user" attributes="{'invisible': [('state','!=','in_progress')]}" icon="fa-user-plus" help="Send to pda"/>
+                        <button name="send_pick_to_pda" class="oe_inline" type="object" groups="stock.group_stock_user" attributes="{'invisible': [('state','!=','in_progress')]}" icon="fa-user-plus" help="Send to pda"/>
                     </div>
                 </field>
 
