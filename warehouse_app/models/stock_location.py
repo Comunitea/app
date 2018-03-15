@@ -95,12 +95,18 @@ class StockLocation (models.Model):
     in_pack = fields.Boolean('Must be in pack', default=False, help = "If checked, al quants in this location be in pack, so  ops and moves must have result_package_id")
     need_check = fields.Boolean("Need check", default=False, help = "Need check in PDA (p.e. when not tags in location)")
 
-
     @api.model
     def name_to_id(self, name):
         location = self.search([('barcode', '=', name)], limit=1)
         return location and location.id or False
 
-
-
-
+    @api.multi
+    def print_location_tag_report(self):
+        self.ensure_one()
+        custom_data = {
+            'location_id': self.id,
+        }
+        rep_name = 'warehouse_app.location_tag_report'
+        rep_action = self.env["report"].get_action(self, rep_name)
+        rep_action['data'] = custom_data
+        return rep_action
