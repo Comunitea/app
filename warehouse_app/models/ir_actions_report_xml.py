@@ -28,6 +28,8 @@ class IrActionsReportXml(models.Model):
 
     @api.multi
     def behaviour(self):
+        return super(IrActionsReportXml, self).behaviour()  
+
         
         results = super(IrActionsReportXml, self).behaviour()
         
