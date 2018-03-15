@@ -24,10 +24,9 @@
             display: table;
         }
         .bc-center{
-            height: 180px !important;
             overflow: hidden;
             text-align:center;
-            padding: 20px 0 0 0;
+            padding: 2px 0 0 0;
             margin: 0;
         }
     </style>
@@ -43,6 +42,7 @@
                         <div class="bc-center">
                             <t t-set="barcode" t-value="o.barcode"/>
                             <img t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', barcode, 920, 260)" style="width:460px;height:80px; margin-left: -45px;"/>
+                            <p class="text-center" t-esc="barcode"/>
                         </div>
                     </div>
                 </div>
